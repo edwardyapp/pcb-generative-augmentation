@@ -105,6 +105,75 @@ PyCharm local history was also checked and holds nothing usable: both
 no file content (zero occurrences of `import torch`, `def forward`, or `class `
 across either `changes.storageData`).
 
+#### 2.2.1 Where `pixelsnail_bottom_best.pt` came from
+
+`_best` is not a name upstream can produce. Upstream's `train_pixelsnail.py`
+saves only `f'checkpoint/pixelsnail_{args.hier}_{str(i+1).zfill(3)}.pt'`, so a
+best-checkpoint mechanism appeared to be implied somewhere. It was not. The
+suffix is a **manual rename**.
+
+**The `.pyc` method does not apply to the training scripts.** CPython writes
+bytecode caches only for *imported* modules, never for the `__main__` entry
+point. `__pycache__/` contains `dataset`, `pixelsnail`, `vqvae` and `scheduler`
+but no `train_pixelsnail` or `train_vqvae`, and never could have. Their Dec-2024
+state had to be established another way.
+
+**`train_pixelsnail.py` was never modified.** Its mtime is
+`2024-11-30 16:00:01.729470388` — identical *to the nanosecond* to `vqvae.py`,
+and within 3 ms of `scheduler.py`, `extract_code.py` and `pixelsnail_mnist.py`.
+That is the signature of a single git checkout writing all of them at once. Its
+size, 4 311 bytes, equals `ef5f67c`'s. It carries no best-tracking logic, and
+never has.
+
+**`train_vqvae.py` was modified**, on 2024-12-01 15:10, 4 300 → 4 306 bytes. The
+whole of that change is two lines, and neither concerns checkpointing:
+`range=(-1,1)` → `value_range=(-1,1)` (a torchvision API rename, +6 bytes) and
+batch size `128` → `256`.
+
+**What the checkpoint says about itself.** `pixelsnail_bottom_best.pt`
+deserialises to `{'model', 'args'}` — upstream's exact save structure — and its
+embedded `args` namespace holds exactly upstream's 14 argparse parameters, no
+more:
+
+```
+batch=32, epoch=420, hier='bottom', lr=0.0003, channel=256, n_res_block=4,
+n_res_channel=256, n_out_res_block=0, n_cond_res_block=3, dropout=0.1,
+amp='O0', sched=None, ckpt=None, path='lmdb/all'
+```
+
+Any code with a best-tracking feature would carry at least one extra flag. There
+is none. `pixelsnail_top_357.pt` is identical but for `hier='top'`.
+
+**The `-ad` fork is ruled out.** `../vq-vae-2-pytorch-ad/train_pixelsnail.py`
+does implement best-checkpoint saving, but names its output
+`f'checkpoint/{object_name}_pixelsnail_{args.hier}_best.pt'` with
+`object_name = args.path.split('/')[-1]`, which is never empty for a real path.
+It cannot produce a prefix-less `pixelsnail_bottom_best.pt`. Its own
+`checkpoint/` holds `pixelsnail_top_420.pt` and `pixelsnail_bottom_420.pt` —
+upstream naming, unprefixed, no `_best`. The `vqvae-2` folder
+(`github.com/vvvm23/vqvae-2`, active 2024-12-05 → 12-19) is a different
+codebase entirely and contains no best-checkpoint logic. No 2024-era shell
+script survives in this repository.
+
+**Conclusion.** `pixelsnail_bottom_best.pt` was written by upstream-identical
+`train_pixelsnail.py` as `pixelsnail_bottom_NNN.pt` and renamed by hand
+afterwards. This matches an established habit visible in
+`checkpoint (cropped good PCB 512)/`, which holds
+`pixelsnail_bottom_243_lr1e-4.pt` and `pixelsnail_bottom_263_lr2e-4.pt` —
+suffixes upstream's f-string cannot generate.
+
+**Still unknown: which epoch.** `args.epoch=420` is the *target* epoch count
+passed on the command line, not the epoch at which the file was written; the
+loop index is not saved. No training log survives. So "best" is a retrospective
+label applied by hand, **not a metric-tracked selection** — nothing records what
+it was best *at*, or against what alternatives. The scare quotes around "best"
+in the archive's own `README.txt` are consistent with this. Any paper text
+implying automatic best-checkpoint selection for this model would be wrong.
+
+*Incidental corroboration.* `path='lmdb/all'` and `ckpt=None` confirm, from
+inside the checkpoint, that it was trained on all 10 boards in a single
+un-resumed run — a claim that until now rested only on the archive `README.txt`.
+
 ### 2.3 Checkpoints — irreplaceable, archived
 
 Three checkpoints, all verified byte-identical between the working tree and the
@@ -254,15 +323,29 @@ input**. That one link is inherited from the ICCE-TW era and is the only break.
 
 ## 4. What cannot be reconstructed — plainly stated
 
-1. **The ICCE-TW checkpoints' training provenance.** No logs, no intermediate
-   checkpoints, no hyperparameter record beyond what the surviving scripts imply.
-2. **The ICCE-TW reported numbers.** Survive only as directory names.
-3. **The 600 px cropping procedure.** Ran on another machine; not in this repo.
-4. **Which exact script version produced any given 2024 artefact.** With no
-   commits in the working period, every mapping in §2 rests on mtimes alone.
+1. **The ICCE-TW checkpoints' training run.** No logs and no intermediate
+   checkpoints survive. The hyperparameters are recoverable — they are embedded
+   in the checkpoints themselves (§2.2.1) — but the loss trajectory is not.
+2. **The epoch at which `pixelsnail_bottom_best.pt` was saved.** Not recorded in
+   the file, and no log survives. "best" is a hand-applied label, not a
+   metric-tracked selection (§2.2.1).
+3. **The ICCE-TW reported numbers.** Survive only as directory names.
+4. **The 600 px cropping procedure.** Ran on another machine; not in this repo.
+5. **Which exact script version produced any given 2024 artefact.** With no
+   commits in the working period, every mapping in §2 rests on filesystem
+   metadata. Established individually for `pixelsnail.py`, `dataset.py`,
+   `train_pixelsnail.py` and `train_vqvae.py` (§2.2, §2.2.1); not for the rest.
 
-Resolved, and no longer on this list: the Dec-2024 state of `pixelsnail.py` and
-`dataset.py`, recovered by inference in §2.2 — both were upstream's, unmodified.
+Resolved, and no longer on this list:
+
+- the Dec-2024 state of `pixelsnail.py` and `dataset.py` — both upstream's,
+  unmodified (§2.2);
+- the Dec-2024 state of `train_pixelsnail.py` (untouched since checkout) and
+  `train_vqvae.py` (two lines, neither checkpoint-related) (§2.2.1);
+- the origin of the `_best` filename — a manual rename, not a code feature
+  (§2.2.1);
+- that the ICCE-TW priors were trained on all 10 boards in one un-resumed run,
+  now confirmed from inside the checkpoints rather than from the archive README.
 
 Dates in §1 and §2 marked **[mtime]** are filesystem metadata, which is mutable
 and carries no cryptographic guarantee. They are consistent across ~60 files and
