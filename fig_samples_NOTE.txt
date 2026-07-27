@@ -1,0 +1,14 @@
+fig_samples.png — selection provenance (no cherry-picking)
+seed: random.Random(0), single instance
+draw order: real[missing_hole, short, spur], then generated[missing_hole, short, spur]; rng.choice(sorted(pool))
+real pool: PCB-cropped-tight/all, un-augmented originals only (no rotation_/l_ variants)
+generated pool: synth_b100 (b100 conditional generator)
+tiles 256x256 as-is; 300 dpi
+
+chosen files:
+  real      missing_hole  PCB-cropped-tight/all/light_12_missing_hole_08_1_600__b0.png
+  real      short         PCB-cropped-tight/all/light_07_short_09_1_600__b1.png
+  real      spur          PCB-cropped-tight/all/light_11_spur_09_1_600__b2.png
+  generated missing_hole  synth_b100/missing_hole_0056.png
+  generated short         synth_b100/short_0206.png
+  generated spur          synth_b100/spur_0242.png

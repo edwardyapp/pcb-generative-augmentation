@@ -1,0 +1,29 @@
+{
+  "threshold": 0.9999767541885376,
+  "null_95": 0.9999767541885376,
+  "sensitivity": 0.6866666666666666,
+  "naive_fpr_at_0.5": 0.8133333333333334,
+  "pools": [
+    {
+      "pool": "REAL 600px crops (all contain a defect)",
+      "n": 150,
+      "frac_calibrated": 0.7133333333333334,
+      "median_max_score": 0.9999984502792358,
+      "threshold": 0.9999767541885376
+    },
+    {
+      "pool": "GENERATED - demo_pool (ICCE-TW demo)",
+      "n": 150,
+      "frac_calibrated": 0.25333333333333335,
+      "median_max_score": 0.9993704855442047,
+      "threshold": 0.9999767541885376
+    },
+    {
+      "pool": "GENERATED - my sample_uncond (same ckpts)",
+      "n": 180,
+      "frac_calibrated": 0.3277777777777778,
+      "median_max_score": 0.9998505115509033,
+      "threshold": 0.9999767541885376
+    }
+  ]
+}

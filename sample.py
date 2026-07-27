@@ -27,7 +27,7 @@ def sample_model(model, device, batch, size, temperature, condition=None):
 def load_model(model, checkpoint, device):
     ckpt = torch.load(os.path.join('checkpoint', checkpoint))
 
-    
+
     if 'args' in ckpt:
         args = ckpt['args']
 
@@ -61,7 +61,7 @@ def load_model(model, checkpoint, device):
             n_cond_res_block=args.n_cond_res_block,
             cond_res_channel=args.n_res_channel,
         )
-        
+
     if 'model' in ckpt:
         ckpt = ckpt['model']
 
@@ -97,4 +97,4 @@ if __name__ == '__main__':
     decoded_sample = model_vqvae.decode_code(top_sample, bottom_sample)
     decoded_sample = decoded_sample.clamp(-1, 1)
 
-    save_image(decoded_sample, args.filename, normalize=True, range=(-1, 1))
+    save_image(decoded_sample, args.filename, normalize=True, value_range=(-1, 1))

@@ -339,12 +339,28 @@ class PixelSNAIL(nn.Module):
         cond_res_channel=0,
         cond_res_kernel=3,
         n_out_res_block=0,
+        n_img_class=0,
     ):
         super().__init__()
 
         height, width = shape
 
         self.n_class = n_class
+
+        # class conditioning (image defect class), separate from n_class (codebook size).
+        # Injected three ways: (1) a pre-block feature bias, (2) a per-block condition through
+        # the same GatedResBlock condition path the bottom prior uses for top codes, and
+        # (3) an output-logit bias. A single global bias alone was too weak (chance-level).
+        self.n_img_class = n_img_class
+        block_cond_dim = cond_res_channel
+        if n_img_class > 0:
+            self.class_emb = nn.Embedding(n_img_class, channel)
+            if block_cond_dim == 0:
+                block_cond_dim = channel
+            self.class_cond_dim = block_cond_dim
+            self.class_cond_emb = nn.Embedding(n_img_class, block_cond_dim)
+            self.class_out = nn.Embedding(n_img_class, n_class)
+        self.block_cond_dim = block_cond_dim
 
         if kernel_size % 2 == 0:
             kernel = kernel_size + 1
@@ -376,7 +392,7 @@ class PixelSNAIL(nn.Module):
                     n_res_block,
                     attention=attention,
                     dropout=dropout,
-                    condition_dim=cond_res_channel,
+                    condition_dim=block_cond_dim,
                 )
             )
 
@@ -394,7 +410,7 @@ class PixelSNAIL(nn.Module):
 
         self.out = nn.Sequential(*out)
 
-    def forward(self, input, condition=None, cache=None):
+    def forward(self, input, condition=None, cache=None, class_label=None):
         if cache is None:
             cache = {}
         batch, height, width = input.shape
@@ -404,6 +420,11 @@ class PixelSNAIL(nn.Module):
         horizontal = shift_down(self.horizontal(input))
         vertical = shift_right(self.vertical(input))
         out = horizontal + vertical
+
+        # per-class global bias, broadcast over space. Added here (not inside the
+        # cache branch) so the autoregressive sampling path applies it every step.
+        if class_label is not None and hasattr(self, 'class_emb'):
+            out = out + self.class_emb(class_label).unsqueeze(-1).unsqueeze(-1)
 
         background = self.background[:, :, :height, :].expand(batch, 2, height, width)
 
@@ -423,9 +444,21 @@ class PixelSNAIL(nn.Module):
                 cache['condition'] = condition.detach().clone()
                 condition = condition[:, :, :height, :]
 
+        # per-block class condition: broadcast the class embedding over space and add it to
+        # the (top-code) condition. Computed every forward call so the cached sampling path
+        # applies it at every step, identically to training.
+        if class_label is not None and hasattr(self, 'class_cond_emb'):
+            class_cond = self.class_cond_emb(class_label).unsqueeze(-1).unsqueeze(-1)
+            class_cond = class_cond.expand(batch, self.class_cond_dim, height, width)
+            condition = class_cond if condition is None else condition + class_cond
+
         for block in self.blocks:
             out = block(out, background, condition=condition)
 
         out = self.out(out)
+
+        # per-class output-logit bias (directly shifts each class's code distribution)
+        if class_label is not None and hasattr(self, 'class_out'):
+            out = out + self.class_out(class_label).unsqueeze(-1).unsqueeze(-1)
 
         return out, cache

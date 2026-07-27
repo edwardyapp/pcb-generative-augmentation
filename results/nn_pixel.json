@@ -1,0 +1,26 @@
+[
+  {
+    "set": "NULL    real crop -> nearest OTHER board (own rotations excluded)",
+    "mean": 0.9998223781585693,
+    "max": 0.9999996423721313,
+    "n": 150
+  },
+  {
+    "set": "CEILING VQ-VAE recon of a real crop (a literal copy)",
+    "mean": 0.9989452362060547,
+    "max": 0.9993906021118164,
+    "n": 120
+  },
+  {
+    "set": "TEST    GENERATED demo_pool",
+    "mean": 0.9949437379837036,
+    "max": 0.9993119239807129,
+    "n": 150
+  },
+  {
+    "set": "TEST    GENERATED my sample_uncond",
+    "mean": 0.9942668676376343,
+    "max": 0.9993290305137634,
+    "n": 180
+  }
+]

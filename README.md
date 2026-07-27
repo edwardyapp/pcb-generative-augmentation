@@ -1,44 +1,91 @@
-# vq-vae-2-pytorch
-Implementation of Generating Diverse High-Fidelity Images with VQ-VAE-2 in PyTorch
+# Crop scale, not generative AI, drives PCB defect classification
 
-## Update
+Code and results for two papers on PCB defect generation and classification,
+built on [rosinality/vq-vae-2-pytorch](https://github.com/rosinality/vq-vae-2-pytorch):
 
-* 2020-06-01
+- **ICCE-TW 2026** — VQ-VAE-2 + PixelSNAIL generation of PCB defect imagery.
+- **ICETA 2026** — a leakage-controlled re-evaluation of that pipeline. Headline:
+  a size-matched change of crop scale is worth **+0.65 macro-F1**, while the
+  class-conditional generator yields **no usable labeled synthetic defects**.
 
-train_vqvae.py and vqvae.py now supports distributed training. You can use --n_gpu [NUM_GPUS] arguments for train_vqvae.py to use [NUM_GPUS] during training.
+Findings and the full argument: [`findings.md`](findings.md).
+Tables: [`results/paper_tables.md`](results/paper_tables.md).
+What produced what, and what cannot be reproduced: **[`PROVENANCE.md`](PROVENANCE.md)** — read this first.
 
-## Requisite
+> ### ⚠️ `vqvae_560.pt` is not the upstream FFHQ checkpoint
+>
+> Upstream shipped a file named `vqvae_560.pt` containing a VQ-VAE pretrained on
+> FFHQ. **That file has been removed from this repository** to prevent a name
+> collision. Our `vqvae_560.pt` is a *different* model — trained on PCB crops,
+> MD5 `ba2932cf30e5096464ead3cd260d4822`, 6 107 550 bytes — and is distributed
+> with the checkpoint release, not in git.
+> Upstream's FFHQ file (MD5 `11a2bb56500299019ec93a03e5eebbf2`) remains
+> available in this repository's history at tag `icce-tw-2026`, and from upstream.
 
-* Python >= 3.6
-* PyTorch >= 1.1
-* lmdb (for storing extracted codes)
+## What is in this repository
 
-[Checkpoint of VQ-VAE pretrained on FFHQ](vqvae_560.pt)
+Code, result files and figures only — about 10 MB.
 
-## Usage
+| path | contents |
+|---|---|
+| `*.py`, `run_*.sh` | pipeline, training, evaluation and plotting scripts |
+| `results/` | every number in both papers, as JSON/CSV/JSONL |
+| `figures/` | figures 1–13 |
+| `findings.md` | the claims, with the evidence for each |
+| `PROVENANCE.md` | provenance, reproducibility, and what is lost |
 
-Currently supports 256px (top/bottom hierarchical prior)
+**Not in git** (see `PROVENANCE.md` for where to get them): model weights
+(51 GB), the HRIPCB-derived image data, extracted `lmdb` codes, training logs.
 
-1. Stage 1 (VQ-VAE)
+## Data
 
-> python train_vqvae.py [DATASET PATH]
+Derived from the public **HRIPCB** dataset (10 boards, 6 defect classes:
+missing_hole, mouse_bite, open_circuit, short, spur, spurious_copper).
 
-If you use FFHQ, I highly recommends to preprocess images. (resize and convert to jpeg)
+Board-level split, seed 0 — boards **06 and 09 held out** as test, touched by
+nothing: not the classifier, not the VQ-VAE, not the priors. 10 668 crops →
+8 596 train / 2 072 test. Recorded in `results/splits.json`.
 
-2. Extract codes for stage 2 training
+## Reproducing the tables
 
-> python extract_code.py --ckpt checkpoint/[VQ-VAE CHECKPOINT] --name [LMDB NAME] [DATASET PATH]
+Given the crops and checkpoints in place:
 
-3. Stage 2 (PixelSNAIL)
+```
+python build_split.py          # -> results/splits.json
+python make_tight_crops.py     # -> PCB-cropped-tight/, results/manifest_tight*.csv
+python make_paper_figs.py      # -> results/paper_tables.md, figures/fig1-4,7
+python plot_budget_abc.py      # -> figures/fig11_budget_abc.png
+python cond_check_n360_report.py
+```
 
-> python train_pixelsnail.py [LMDB NAME]
+Full script-to-table mapping: `PROVENANCE.md` §3.1.
 
-Maybe it is better to use larger PixelSNAIL model. Currently model size is reduced due to GPU constraints.
+One link in the chain is **not** reproducible here: the 600 px crops in
+`PCB-cropped/` were produced by a script that ran on another machine and is not
+in this repository. They are an input, and must be obtained with the data
+release. See `PROVENANCE.md` §2.5.
 
-## Sample
+## Upstream usage
 
-### Stage 1
+The VQ-VAE-2 / PixelSNAIL implementation is upstream's, with modifications for
+class-conditional priors. Upstream's original instructions:
 
-Note: This is a training sample
+1. Stage 1 (VQ-VAE): `python train_vqvae.py [DATASET PATH]`
+2. Extract codes: `python extract_code.py --ckpt checkpoint/[VQ-VAE CHECKPOINT] --name [LMDB NAME] [DATASET PATH]`
+3. Stage 2 (PixelSNAIL): `python train_pixelsnail.py [LMDB NAME]`
 
-![Sample from Stage 1 (VQ-VAE)](stage1_sample.png)
+Requires Python ≥ 3.6, PyTorch ≥ 1.1, lmdb. Developed against Python 3.9.
+
+## Citing
+
+If you use this code or data, please cite the relevant paper and the checkpoint
+release DOI. Details in `PROVENANCE.md`.
+
+## License
+
+MIT. The VQ-VAE-2 / PixelSNAIL implementation is Copyright (c) 2019 Kim
+Seonghyeon; modifications and all PCB-specific work are Copyright (c) 2026
+Edward Yapp. See [`LICENSE`](LICENSE).
+
+The HRIPCB dataset is the property of its original authors and is subject to its
+own terms; this repository redistributes only derived crops.

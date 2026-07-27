@@ -102,3 +102,51 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# ---------------------------------------------------------------------------
+# PCB defect-generation project (ICCE-TW 2026 / ICETA 2026)
+#
+# This repository tracks CODE, RESULT FILES and FIGURES only. Model weights and
+# image data are distributed separately -- see PROVENANCE.md.
+# ---------------------------------------------------------------------------
+
+# Virtualenv (5.4 GB; the stock template above only covers venv/ and env/)
+.venv/
+
+# IDE
+.idea/
+
+# Model weights -- 51 GB across 236 files. Zenodo/GitHub release, never git.
+# Matches "checkpoint/" and the Dec-2024 "checkpoint (cropped ...)/" dirs.
+checkpoint*/
+*.pt
+*.pth
+*.ckpt
+
+# Extracted VQ-VAE codes -- regenerable via extract_code_labeled.py
+lmdb/
+
+# Training logs (72 MB) -- attach to the Zenodo record instead
+logs/
+
+# Image data -- HRIPCB-derived, redistributed separately (PROVENANCE.md §3.2)
+PCB*/
+VOC_PCB/
+
+# Generated / sampled imagery and review assets
+sample*/
+synth_*/
+recon_*/
+demo_pool/
+demo_timelapse/
+*review_assets/
+*.npy
+
+# Loose imagery at repo root (ICCE-TW-era scratch)
+/*.png
+/*.jpg
+
+# ...but the paper figures and result files ARE tracked
+!figures/
+!figures/*.png
+!results/

@@ -75,7 +75,7 @@ def train(epoch, loader, model, optimizer, scheduler, device):
                     f"sample/{str(epoch + 1).zfill(5)}_{str(i).zfill(5)}.png",
                     nrow=sample_size,
                     normalize=True,
-                    range=(-1, 1),
+                    value_range=(-1, 1),
                 )
 
                 model.train()
@@ -98,7 +98,7 @@ def main(args):
     dataset = datasets.ImageFolder(args.path, transform=transform)
     sampler = dist.data_sampler(dataset, shuffle=True, distributed=args.distributed)
     loader = DataLoader(
-        dataset, batch_size=128 // args.n_gpu, sampler=sampler, num_workers=2
+        dataset, batch_size=256 // args.n_gpu, sampler=sampler, num_workers=2
     )
 
     model = VQVAE().to(device)

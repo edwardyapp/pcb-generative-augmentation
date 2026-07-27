@@ -1,0 +1,16 @@
+{
+ "macro_f1": 0.9182172184019585,
+ "accuracy": 0.916988416988417,
+ "n": 518,
+ "per_class_f1": {
+  "missing_hole": 1.0,
+  "mouse_bite": 0.8706,
+  "open_circuit": 0.908,
+  "short": 0.9524,
+  "spur": 0.9486,
+  "spurious_copper": 0.8298
+ },
+ "judge": "checkpoint/classifier_Atight_b100_s0.pt",
+ "vqvae": "checkpoint/vqvae_tight_560.pt",
+ "note": "in-memory recon of the 518 manifest_tight test crops, bilinear 224, regenerated 2026-07-17"
+}

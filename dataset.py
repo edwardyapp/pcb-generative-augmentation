@@ -7,6 +7,8 @@ from torch.utils.data import Dataset
 from torchvision import datasets
 import lmdb
 
+from pcb_utils import parse_filename, CLASS_TO_IDX
+
 
 CodeRow = namedtuple('CodeRow', ['top', 'bottom', 'filename'])
 
@@ -48,4 +50,7 @@ class LMDBDataset(Dataset):
 
             row = pickle.loads(txn.get(key))
 
-        return torch.from_numpy(row.top), torch.from_numpy(row.bottom), row.filename
+        parsed = parse_filename(os.path.basename(row.filename))
+        label = CLASS_TO_IDX[parsed['cls']] if parsed is not None else -1
+
+        return torch.from_numpy(row.top), torch.from_numpy(row.bottom), label

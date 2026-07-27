@@ -1,6 +1,12 @@
 MIT License
 
 Copyright (c) 2019 Kim Seonghyeon
+Copyright (c) 2026 Edward Yapp
+
+The VQ-VAE-2 and PixelSNAIL implementation is the work of Kim Seonghyeon
+(https://github.com/rosinality/vq-vae-2-pytorch). Modifications to it, and all
+PCB-specific code, data preparation, evaluation and analysis, are the work of
+Edward Yapp. Both are released under the terms below.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
