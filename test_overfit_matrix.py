@@ -20,6 +20,9 @@ Also reported: TEACHER-FORCED reproduction, which removes drift entirely. If tea
 reproduction is ~100% and diagonal dominance holds, the wiring is provably correct and the only
 problem is drift -- a modelling issue, not a bug.
 """
+import json
+import os
+
 import numpy as np
 import torch
 from torch import nn
@@ -104,8 +107,40 @@ def main():
     print(f'  separation      {100*(diag.mean()-off.mean()):+.1f} pp')
     print(f'  classes whose BEST match is their own example: {correct}/6')
 
+    # Persist the numbers. Until 2026-07 this test printed to stdout and saved one PNG that
+    # records no metrics at all, so an audit could not recover what it had measured without
+    # re-running it. Write the matrix and every summary statistic to disk.
+    passed = bool(correct >= 5 and diag.mean() - off.mean() > 0.05)
+    os.makedirs('results', exist_ok=True)
+    with open('results/overfit_matrix.json', 'w') as fh:
+        json.dump({
+            'test': 'overfit-one-batch cross-class match matrix',
+            'hier': 'top',
+            'scope': 'Reduced-capacity surrogate from test_conditioning.build (channel=128, '
+                     'n_block=2, n_res_block=2, n_res_channel=128, dropout=0.0), NOT the '
+                     'published prior (channel=256, n_block=4, n_res_block=4, '
+                     'n_res_channel=256, dropout=0.1). The conditioning topology is '
+                     'identical; only widths/depths differ. Top prior only.',
+            'codes': 'lmdb/train_pool_tight',
+            'epochs': EPOCHS,
+            'classes': CLASSES,
+            'teacher_forced_per_class': {CLASSES[k]: round(float(tf[k]), 6) for k in range(6)},
+            'teacher_forced_mean': round(float(tf.mean()), 6),
+            'match_matrix': [[round(float(M[i, j]), 6) for j in range(6)] for i in range(6)],
+            'match_matrix_axes': 'row = class SAMPLED, col = memorised example compared to',
+            'free_running_diagonal_mean': round(float(diag.mean()), 6),
+            'free_running_offdiag_mean': round(float(off.mean()), 6),
+            'separation_pp': round(float(100 * (diag.mean() - off.mean())), 4),
+            'classes_best_matching_own_example': correct,
+            'n_classes': 6,
+            'verdict': 'WIRING CORRECT' if passed else 'WIRING BROKEN',
+            'note': 'Not bit-reproducible: torch.manual_seed(0) is set but cuDNN is '
+                    'nondeterministic. Margins are ~99% vs ~19%, far above run-to-run noise.',
+        }, fh, indent=2)
+    print('\n  wrote results/overfit_matrix.json')
+
     print('\n' + '-' * 74)
-    if correct >= 5 and diag.mean() - off.mean() > 0.05:
+    if passed:
         print('  => WIRING IS CORRECT. Conditioned on class c, the model reproduces class c\'s')
         print('     example more than any other class\'s. The class label is doing real work in')
         print('     the cached sampling path. The 61% free-running reproduction is AUTOREGRESSIVE')

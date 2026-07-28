@@ -1,0 +1,35 @@
+# Line-ending policy for this repository.
+#
+# History: the 2024 upstream/ICCE-TW-era sources (pixelsnail.py, vqvae.py, dataset.py,
+# train_vqvae.py, train_pixelsnail.py, ...) were committed with CRLF endings, while every
+# 2026 ICETA-era script is LF. The .py files were normalised to LF in the pre-publication
+# cleanup; this file keeps them that way and stops the two conventions diverging again.
+
+# Default: treat as text, normalise to LF in the index and on checkout.
+* text=auto eol=lf
+
+# ---------------------------------------------------------------------------
+# EXCEPTION — results/*.csv must NEVER be renormalised.
+#
+# These manifests are written by Python's csv module with newline='' (see
+# build_split.py, make_tight_crops.py, make_budget_subsamples.py), which emits \r\n by
+# construction. They are audited data artefacts: their exact bytes back the board-split
+# and subsample provenance recorded in AUDIT.md. Rewriting their line endings would
+# change 25k+ lines and invalidate that byte-level trail for no benefit — Python's csv
+# reader handles either convention transparently.
+# ---------------------------------------------------------------------------
+results/*.csv -text
+
+# ---------------------------------------------------------------------------
+# Binary: never diff, never touch line endings.
+# ---------------------------------------------------------------------------
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.pt    binary
+*.pth   binary
+*.npy   binary
+*.mdb   binary
+*.zip   binary
+*.pdf   binary

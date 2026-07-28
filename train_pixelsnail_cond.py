@@ -1,8 +1,28 @@
 """Stage 3: class-conditional PixelSNAIL training (top or bottom prior).
 
-Adds a per-class global bias (pixelsnail.py: n_img_class / class_emb). Warm-starts
-from the existing unconditional checkpoint (only class_emb is new -> strict=False).
-Checkpoints every epoch. Run one hier per process; drive top then bottom.
+CONDITIONING IS INJECTED AT THREE POINTS inside pixelsnail.py -- not as a single global
+bias. A single global bias alone was too weak (conditioning stayed at chance):
+  1. `class_emb`      (n_img_class x channel)         a per-class feature bias added to
+     the pre-block horizontal+vertical feature map, broadcast over space.
+  2. `class_cond_emb` (n_img_class x block_cond_dim)  a per-class condition handed to
+     every GatedResBlock in every PixelBlock. For the TOP prior we pass neither
+     n_cond_res_block nor cond_res_channel, so no cond_resnet is built and condition is
+     None -- the class embedding IS the sole block condition (block_cond_dim falls back
+     to `channel`). For the BOTTOM prior it is SUMMED with the up-sampled top-code
+     condition produced by cond_resnet.
+  3. `class_out`      (n_img_class x n_class)         a per-class output-logit bias.
+
+This scheme is local to this repository: the upstream PixelSNAIL port has no class
+conditioning at all (n_img_class does not exist before the ICETA work). Describe the
+three injection points directly; do not cite it as the Razavi et al. formulation.
+
+--warm exists but was NOT used for any published prior: every prior_b{10,25,50,100}
+checkpoint records warm=None in its embedded args (AUDIT.md 3.3). Each published
+generator was trained from scratch on its own budget's codes.
+
+Checkpoints every --save_every epochs (default 40) plus the final epoch -- NOT every
+epoch; saving every epoch wrote 537GB and filled the disk mid-run. Run one hier per
+process; drive top then bottom.
 """
 import argparse
 
