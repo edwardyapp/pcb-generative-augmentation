@@ -1,5 +1,10 @@
 # AUDIT — adversarial verification of five claims
 
+> **Scope note (appended 2026-07-28).** The title records this document's original commission —
+> five scoped claims, §1–§5. Scope has since grown to **31 claims across §1–§6**: the original
+> five, plus the 26 remaining ICETA numbers verified in §6. The title is left as first written;
+> this document is amended by appending, never by editing an earlier statement.
+
 Date: 2026-07-27. Auditor operated under: *trust no summary document, no memory file, no
 `findings.md`, no `PROVENANCE.md`*. Every number below was read out of a raw result JSON, a
 raw CSV, an LMDB code store, a `.pt` checkpoint's embedded `args`, or a run log. Summary
@@ -1183,3 +1188,209 @@ the four a generated artefact (`results/paper_tables.md`, `logs/b10_seeds.log`,
 any of them. The direction and significance of every claim survives correction — the corrected
 crop-scale effect is +0.651 instead of +0.654, the corrected binary gain is +0.018 against a
 0.841 baseline, and the corrected leaky gain is larger, not smaller, than published.
+
+> **Superseded in part by §7 (2026-07-28).** The last clause above accepts the paper's framing
+> that `abc_recon`'s `B_pool` measures leakage. §7 shows it does not: it is a reconstruction
+> upper bound, and the true leaky protocol yields **+0.002**, not +0.51. Claim 15's arithmetic
+> verdict stands (+0.510 is the correct within-experiment value of *that* quantity); what
+> changes is what the quantity means.
+
+---
+
+# §7 — The true leaky control (new experiment, 2026-07-28)
+
+§1–§6 verified numbers against files. This section reports a **new experiment**, run because
+§6.8 found that the quantity the paper calls "leaky" is not a generator experiment at all.
+
+## 7.1 Why the published leaky number does not measure leakage
+
+The paper's Finding 5c — *"the number the field would have reported is leakage"* — cites
+`abc_recon.json`'s `B_pool`. Read from source, that condition is:
+
+```python
+# abc_recon.py:139-152
+full_pool = recon_pool                    # VQ-VAE round-trip of all 2149 real train crops
+runs = {'B_pool': real + full_pool, ...}
+```
+
+`abc_recon.py` imports `VQVAE` and **never imports `PixelSNAIL`** — no prior is involved. So
+the published "leaky" arm differs from the honest arm in **two** ways at once:
+
+| | honest (`abc_budget`) | published "leaky" (`abc_recon` `B_pool`) | **true leaky (§7.2)** |
+|---|---|---|---|
+| pool contents | 360 **generated** samples | 2 149 **reconstructions of real crops** | 360 **generated** samples |
+| generator | budget-*b* prior, from scratch | **none — no generator exists** | full-pool prior (`prior_b100`) |
+| pool size | 360 | **2 149** | 360 |
+| labels | conditioned class | true class of the real crop | conditioned class |
+
+A +0.51 measured this way conflates three things: the leak, a ~6× larger training pool, and
+the substitution of near-copies of real data for generated samples. It is a legitimate and
+useful quantity — an **upper bound on what leakage could deliver if a generator reproduced its
+training set faithfully** — but it is not what a leaky generator experiment reports.
+
+## 7.2 The correct protocol, and how it was run
+
+Generator trained on the full train pool, classifier restricted to budget *b*, pool size held
+equal to the honest arm, filter unchanged.
+
+`prior_b100_{top,bottom}_320.pt` is that generator — `warm=None`, `path=lmdb/train_pool_tight`
+(all 4 274 train-pool crops; §3.3) — and `synth_b100/` is its 360-sample output. **No new code
+was written**: `abc_budget.py` already parameterises exactly this contrast.
+
+```bash
+for B in 10 25 50; do
+  CUDA_VISIBLE_DEVICES=1 python abc_budget.py \
+    --budget $B --synth synth_b100 \
+    --manifest results/manifest_tight_b${B}.csv \
+    --out results/abc_leaky_b${B}.json
+done
+```
+
+Everything except the pool's origin is identical to the honest run: same frozen subsample
+(`build_train_items(rows, 1.0, seed=0)`), same 518-crop board-split test set, same ResNet-18
+recipe, same 3 seeds, same no-leakage filter (the Condition-A model at budget *b*, seed *s*,
+handed straight to `filter_pool`). Outputs: `results/abc_leaky_b{10,25,50}.json`.
+
+## 7.3 Result
+
+```bash
+python3 -c "
+import json, statistics as st
+m=lambda p,k: st.mean([r[k]['macro_f1'] for r in json.load(open(p))])
+for b in [10,25,50]:
+    h,l=f'results/abc_budget_b{b}.json', f'results/abc_leaky_b{b}.json'
+    print('b%-4d honest B-A %+.4f  C-A %+.4f   |   leaky B-A %+.4f  C-A %+.4f' %
+          (b, m(h,'B')-m(h,'A'), m(h,'C')-m(h,'A'), m(l,'B')-m(l,'A'), m(l,'C')-m(l,'A')))
+"
+```
+
+| budget | honest A | honest **B−A** | honest C−A | leaky A | leaky **B−A** | leaky C−A |
+|---|---|---|---|---|---|---|
+| 10% | 0.418598 | **+0.0123** | +0.0147 | 0.422248 | **+0.0020** | +0.0006 |
+| 25% | 0.641112 | **−0.0457** | −0.0094 | 0.645408 | **−0.0659** | +0.0015 |
+| 50% | 0.803530 | **−0.0442** | +0.0108 | 0.788738 | **−0.0168** | −0.0012 |
+
+For comparison, the reconstruction bound the paper currently cites as leaky:
+**+0.5100 / +0.2648 / +0.1212** at the same three budgets.
+
+**The full-pool generator confers no benefit.** At 10% it gives **+0.002** where the published
+figure is +0.510 — a factor of 255. At 25% and 50% the leaky pool *hurts*, as the honest pool
+does. At 10% the honest generator is nominally *better* than the leaky one (+0.012 vs +0.002),
+which is itself inside noise. Every leaky B−A and C−A here is within the ±0.015–0.025
+run-to-run band established in §7.5.
+
+## 7.4 Filter keep-rates — an independent corroboration
+
+| budget | keep-rate, **honest** pool | keep-rate, **leaky** pool |
+|---|---|---|
+| 10% | 23.0% | 24.4% |
+| 25% | **54.5%** | **28.9%** |
+| 50% | **49.6%** | **31.4%** |
+
+At 25% and 50% the budget-*b* filter rejects the **full-pool** generator's samples about twice
+as often as it rejects that budget's own generator's samples. A pool carrying smuggled
+information about the wider training set ought to look *more* like real data to a classifier,
+not less. This reproduces, in the 6-way track, the effect §6.3 recorded in the binary track
+(the filter rejects 64–95% of the full-pool generator's samples) and points the same way: the
+full-pool prior's samples are further from the real distribution, not closer.
+
+## 7.5 Run-to-run nondeterminism is larger than §"Two further observations" stated
+
+Each leaky run retrains Condition A on data identical to the honest run's, with the same
+seeds. The A columns are therefore a direct nondeterminism probe:
+
+| budget | honest A | leaky-run A | \|diff\| |
+|---|---|---|---|
+| 10% | 0.418598 | 0.422248 | 0.003650 |
+| 25% | 0.641112 | 0.645408 | 0.004295 |
+| 50% | 0.803530 | 0.788738 | **0.014792** |
+
+A second, cleaner probe already existed in the binary track and was missed until now: at the
+100% budget `abc_binary.py:50` sets `honest = leaky`, so `B_honest` and `B_leaky` are two
+trainings on **the identical pool with the identical seed** (confirmed: same `n`=360, same
+keep-rate to 4 dp). Their differences are 0.003862, **0.025110**, 0.000958.
+
+**The ±0.004 figure in §"Two further observations" is too optimistic.** Observed spread on
+identical data and identical seeds reaches **0.015 (6-way)** and **0.025 (binary)**. The paper
+should quote **±0.015, and up to ±0.025 on the binary task**. Consequences:
+
+- The binary track's headline (+0.018 honest at 10%) sits at the edge of this band, and its
+  leaky effects (+0.002 to +0.016) sit inside it.
+- The 6-way harm figures (−0.046, −0.044, −0.052) remain well outside it.
+- The b10 paired test (§2) is unaffected — pairing differences out is precisely what it does,
+  and its own sd (0.031) already reflects this noise.
+
+## 7.6 What this does to Finding 5c
+
+The specific claim fails; the paper's central thesis survives and is better supported.
+
+**Fails.** *"Replacing generated samples with reconstructions … lifts the 10% budget from
+0.400 to 0.910, i.e. '+0.51 macro-F1 from synthetic data' … Any scarcity experiment whose
+generator saw the full training set is measuring its own leak."* Run as an actual generator
+experiment, a generator that saw the full training set delivers **+0.002**. The +0.51 is not
+what leakage does here; it is what leakage *could* do if the generator worked.
+
+**Survives, and is strengthened.** The gap between the two — +0.510 achievable versus +0.002
+delivered — is a clean measurement of exactly what the paper argues: this pipeline's
+class-conditional PixelSNAIL produces samples carrying almost none of the information its
+training data holds. The reconstruction arm is the right control to keep; it is the ceiling.
+The honest and true-leaky arms are the floor. The distance between ceiling and floor is the
+result.
+
+**Suggested reframing.** Report three arms, not two:
+
+| arm | what it is | 10% budget |
+|---|---|---|
+| honest | budget-*b* generator, 360 samples | +0.012 |
+| true leaky | full-pool generator, 360 samples | **+0.002** |
+| reconstruction ceiling | VQ-VAE round-trip of the full pool, 2 149 crops | +0.510 |
+
+and state the conclusion as: *a generator trained on the full training set buys nothing over
+one trained on 10% of it, while merely round-tripping that training set through the same
+decoder buys +0.51 — so the failure is in generation, not in what the generator was allowed to
+see.* That is a stronger and more defensible claim than the one currently in Finding 5c, and
+it retires the "any scarcity experiment whose generator saw the full training set is measuring
+its own leak" sentence, which this experiment does not support.
+
+## 7.7 Binary track — no re-run required
+
+The binary track's leaky arm was **already** the correct protocol, verified in source:
+`run_binary_track.sh:38-41` trains `uncond_tight` priors on `lmdb/train_pool_tight` (the full
+pool) and samples `synth_binary_pool/`; `abc_binary.py:45-62` pairs that pool with each
+budget's real subsample and the budget-*b* Condition-A filter.
+
+```bash
+python3 -c "
+import json, statistics as st
+d=json.load(open('results/abc_binary.json'))
+for b in [0.1,0.25,0.5,1.0]:
+    r=[x for x in d if abs(x['budget']-b)<1e-9]
+    a=st.mean([x['A']['macro_f1'] for x in r])
+    for c in ['B_honest','B_leaky']:
+        print('%3d%% %-9s %+.4f' % (int(b*100), c, st.mean([x[c]['macro_f1'] for x in r])-a), end='   ')
+    print()
+"
+```
+
+| budget | honest B−A | **leaky B−A** |
+|---|---|---|
+| 10% | +0.0179 | **+0.0018** |
+| 25% | +0.0074 | **+0.0155** |
+| 50% | +0.0016 | **+0.0032** |
+| 100% | +0.0013 | **−0.0081** (same pool as honest; difference is noise) |
+
+Same picture as the 6-way track: the full-pool generator delivers nothing outside the noise
+band, and at 100% the "two arms" are the same pool, so that row's −0.008 measures
+nondeterminism, not leakage. `findings.md`'s existing sentence — *"even the leaky pool moves
+nothing (+0.002 at 10%)"* — is correct and needs no change. The binary track therefore already
+told the true story; only the 6-way track's leaky arm was mislabelled.
+
+## §7 verdict
+
+The leaky control, run correctly for the first time, gives **B−A = +0.002 / −0.066 / −0.017**
+at the 10/25/50% budgets against a published +0.510 / +0.265 / +0.121 obtained from a
+reconstruction substitute with a 6× larger pool. Finding 5c's specific claim is not supported.
+The paper's central negative result is unaffected and, on the three-arm framing above, better
+evidenced than before. Two further corrections follow from these runs: run-to-run
+nondeterminism is **±0.015 (6-way) / ±0.025 (binary)**, not ±0.004; and the leaky pool is
+rejected by the budget-*b* filter roughly twice as often as the honest pool at 25% and 50%.
