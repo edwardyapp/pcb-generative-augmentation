@@ -663,3 +663,523 @@ stat -c "%y  %n" abc_budget.py abc_recon.py abc_b10_seeds.py results/abc_budget_
 Nothing in the five audited claims is void. The two caveats (§3.4 b100 generator corpus is a
 per-bbox superset over the same 2149 base images; §4.2 `synth_b10` source-file mtime overlap)
 are disclosed in full and neither changes a published value.
+
+---
+
+# §6 — Every remaining ICETA number
+
+Added 2026-07-28. Same rules as §1–§5: verified from raw result JSONs, raw CSVs, the VOC
+annotation XML and source code only. Summary documents (`findings.md`, `results/paper_tables.md`)
+were used **only** to locate which raw field a claim refers to, never as evidence — and where
+they disagree with the raw files, that is recorded below as a finding.
+
+**26 claims checked: 20 PASS, 4 MISMATCH, 2 PASS-with-qualification.**
+
+A number is marked **[derived]** when it is not a recorded field but a restatement computed
+from other numbers (a difference, ratio or share). Derived numbers cannot be "wrong" in the
+file — they can only be wrong in the arithmetic or in the choice of inputs, and for two of
+them the input choice is the problem.
+
+## 6.1 Summary
+
+| # | claim | verdict |
+|---|---|---|
+| 1 | 600px baseline 0.246 ± 0.013 | **PASS** |
+| 2 | TIGHT size-matched 0.900 ± 0.018 | **MISMATCH** — actual 0.897 ± 0.020 |
+| 3 | 93% of the gain attributable to crop scale [derived] | **PASS** |
+| 4 | Binary baseline 0.838 @ 10% | **MISMATCH** — that is seed 0; 3-seed mean is 0.841 |
+| 5 | Binary honest +0.018 @ 10% [derived] | **PASS** |
+| 6 | Binary seed noise ±0.021 | **PASS** |
+| 7 | Binary ≤ +0.007 at other budgets [derived] | **PASS on rounding** — true max +0.0074 |
+| 8 | Binary filter rejection 64–95% [derived] | **PASS** |
+| 9 | Conditioning consistency ≤ 53% at any budget | **PASS** |
+| 10 | Conditioning 15% at 215 crops | **PASS** |
+| 11 | Filter keep-rate 25.5% at b10 | **PASS** — 10-seed run only; 3-seed run is 23.0% |
+| 12 | Reconstructions classify at 0.918 | **PASS** |
+| 13 | Held-out prior NLL worse than a uniform prior | **MISMATCH if unqualified** — true of the bottom prior, false of the top |
+| 14 | Harm −0.046 / −0.044 / −0.052 [derived] | **PASS** |
+| 15 | Leaky gain +0.49 [derived] | **MISMATCH** — cross-experiment subtraction; within-experiment is +0.51 |
+| 16 | 18× the detection floor [derived] | **PASS on rounding** — pairing- and formula-dependent (15.7×–18.3×) |
+| 17 | MDE ±0.028 [derived] | **PASS** under the normal approximation; exact paired-t gives ±0.031 |
+| 18 | Full-data baseline 0.918 | **PASS but ambiguous** — two distinct quantities both round to 0.918 |
+| 19 | Median defect 27×27 px | **PASS** |
+| 20 | ≈0.2% of frame [derived] | **PASS** (area fraction) |
+| 21 | 518 test crops | **PASS** |
+| 22 | 2 149 primary train-pool crops | **PASS** |
+| 23 | Budgets 215 / 537 / 1 075 / 2 149 | **PASS** |
+| 24 | 10 boards | **PASS** |
+| 25 | 6 classes | **PASS** |
+| 26 | Primary = defect nearest the frame centre | **PASS** |
+
+---
+
+## 6.2 Crop scale
+
+**Source:** `results/classifier_A_b100_s{0,1,2}.json` (600px), `classifier_Atight_b100_s*.json`
+(TIGHT size-matched), `classifier_Atightpb_b100_s*.json` (TIGHT per-bbox).
+**Field:** `macro_f1`, mean and population std over the 3 seed files.
+
+```bash
+python3 -c "
+import json, glob, statistics as st
+for cond in ['A','Atight','Atightpb']:
+    fs=sorted(glob.glob(f'results/classifier_{cond}_b100_s*.json'))
+    v=[json.load(open(f))['macro_f1'] for f in fs]
+    n=json.load(open(fs[0]))['n_train']
+    print(f'{cond:9s} n_train={n:5d}  {st.mean(v):.6f} +/- {st.pstdev(v):.6f}  per-seed {[round(x,6) for x in v]}')
+"
+```
+
+| set | n_train | claimed | **actual** | verdict |
+|---|---|---|---|---|
+| 600px baseline | 2149 | 0.246 ± 0.013 | **0.246396 ± 0.012840** | **PASS** |
+| TIGHT size-matched | 2149 | 0.900 ± 0.018 | **0.897488 ± 0.020431** | **MISMATCH** |
+| TIGHT per-bbox | 4274 | (not in scope) | 0.946600 ± 0.004534 | — |
+
+### Claim 2 is a MISMATCH, and there are three different values in circulation
+
+Per-seed TIGHT size-matched `macro_f1`: **0.925527, 0.889510, 0.877426**. Mean 0.897488,
+population std 0.020431, sample std 0.025023.
+
+No field in those three files yields 0.900 ± 0.018. Every candidate:
+
+| field | mean ± pop-std | ± sample-std |
+|---|---|---|
+| `macro_f1` | 0.897488 ± 0.020431 | ± 0.025023 |
+| `accuracy` | 0.895753 ± 0.021206 | ± 0.025972 |
+| `best_macro_f1` | 0.918944 ± 0.004669 | ± 0.005718 |
+
+Three values are in circulation for this one cell, and they do not agree:
+
+- the paper: **0.900 ± 0.018** — matches no field;
+- `findings.md:34` and `:60`: **0.896 ± 0.018** — the mean matches `accuracy` (0.895753),
+  not macro-F1, and no field has std 0.018;
+- `results/paper_tables.md:8`: **0.897 ± 0.020** — **correct**, matches `macro_f1` exactly.
+
+The generated table (`paper_tables.md`) is right; the two hand-written restatements drifted
+from it in different directions. The only 0.018 anywhere nearby is the *600px baseline's*
+`best_macro_f1` population std (0.018084), which is a different row and a different field —
+noted as the likeliest transcription origin, not as an established one.
+
+**Use 0.897 ± 0.020.** Nothing else in the paper depends on which of the three is printed —
+see claim 3.
+
+### Claim 3 — the 93% decomposition **[derived]**
+
+```bash
+python3 -c "
+import json, glob, statistics as st
+m=lambda c: st.mean([json.load(open(f))['macro_f1'] for f in sorted(glob.glob(f'results/classifier_{c}_b100_s*.json'))])
+scale=m('Atight')-m('A'); size=m('Atightpb')-m('Atight')
+print('scale %+.6f  size %+.6f  total %.6f  scale share %.2f%%' % (scale,size,scale+size,100*scale/(scale+size)))
+"
+```
+
+**Actual:** crop scale `0.897488 − 0.246396 = +0.651092`; dataset size
+`0.946600 − 0.897488 = +0.049112`; total `0.700204`; **scale share = 92.99%**, size share 7.01%.
+
+**PASS.** Rounds to the published "+0.65 from scale, +0.05 from size, ~93% / ~7%". The
+decomposition is robust to claim 2's discrepancy: substituting the claimed 0.900 gives a
+93.3% share, still 93%. The two effects are measured at held-fixed dataset size (both 2149)
+and held-fixed crop scale respectively, so the decomposition is not confounded.
+
+---
+
+## 6.3 Binary track
+
+**Source:** `results/abc_binary.json` — 12 records (4 budgets × 3 seeds), keys `A`,
+`B_honest`, `C_honest`, `B_leaky`, `C_leaky`. **Field:** `[i][cond]["macro_f1"]`, and
+`[i]["C_*"]["keep_rate"]`.
+
+```bash
+python3 -c "
+import json, statistics as st
+d=json.load(open('results/abc_binary.json'))
+for b in [0.1,0.25,0.5,1.0]:
+    r=[x for x in d if abs(x['budget']-b)<1e-9]
+    a=st.mean([x['A']['macro_f1'] for x in r])
+    print('%3d%% A=%.6f +/- %.6f  n_real=%d' % (int(b*100), a, st.pstdev([x['A']['macro_f1'] for x in r]), r[0]['n_real']))
+    for c in ['B_honest','C_honest','B_leaky','C_leaky']:
+        v=[x[c]['macro_f1'] for x in r]
+        print('      %-9s %.6f +/- %.6f  (%+.6f vs A)' % (c, st.mean(v), st.pstdev(v), st.mean(v)-a))
+"
+```
+
+### Claim 4 — baseline 0.838 @ 10% is a **MISMATCH**
+
+| quantity | value |
+|---|---|
+| per-seed A @ 10% | 0.837838, 0.848900, 0.836357 |
+| **3-seed mean** | **0.841031 ± 0.005607** |
+| seed 0 alone | **0.837838** → 0.838 |
+
+The published 0.838 is **seed 0 in isolation**, not the 3-seed mean that every other number in
+this table uses. `findings.md:155` reports the same cell correctly as 0.841 ± 0.006. The
+correct baseline is **0.841**.
+
+This matters for claim 5: quoting the baseline as 0.838 while quoting the gain as +0.018
+(which is computed against 0.841) is internally inconsistent — 0.859 − 0.838 would be +0.021,
+not +0.018.
+
+### Claims 5–8
+
+| # | claim | source | **actual** | verdict |
+|---|---|---|---|---|
+| 5 | honest +0.018 @ 10% **[derived]** | `B_honest` − `A` | 0.858913 − 0.841031 = **+0.017882** | **PASS** |
+| 6 | seed noise ±0.021 | `B_honest` @ 10% pop-std | **0.021254** | **PASS** |
+| 7 | ≤ +0.007 at other budgets **[derived]** | max honest gain, 25/50/100% | **+0.007412** (25%, `B_honest`) | **PASS on rounding** |
+| 8 | filter rejection 64–95% **[derived]** | `1 − C_leaky.keep_rate`, all 12 runs | **64.4% – 94.7%** | **PASS** |
+
+Claim 7 detail — every honest gain outside the 10% budget:
+
+| budget | `B_honest` − A | `C_honest` − A |
+|---|---|---|
+| 25% | **+0.007412** | −0.014199 |
+| 50% | +0.001618 | +0.000005 |
+| 100% | +0.001287 | −0.004827 |
+
+The maximum is +0.007412, which **rounds** to +0.007 but is not ≤ 0.007 exactly. `findings.md`
+states the same bound more defensibly as "< +0.008 everywhere else". Prefer that phrasing, or
+write "≤ +0.008". Note also that `C_honest` is *negative* at 25% and 100%, so "≤ +0.007" is a
+bound on the best case, not a description of typical behaviour.
+
+Claim 8 detail — `C_leaky` rejection rates, all 12 runs: 94.7, 78.9, 64.7 (10%); 76.9, 68.1,
+64.4 (25%); 78.1, 70.3, 88.9 (50%); 75.6, 73.3, 79.4 (100%). Min 64.4%, max 94.7% → **64–95%**.
+The corresponding honest keep-rates span 20.6%–91.4%, consistent with `findings.md`'s "21–91%".
+
+---
+
+## 6.4 Conditioning consistency
+
+**Source:** `results/cond_checks_budget.jsonl` — one record per budget, tag `prior_b{10,25,50,100}`.
+**Field:** `consistency`. All four are **n = 72** checks (12 per class × 6 classes).
+
+```bash
+python3 -c "
+import json
+for ln in open('results/cond_checks_budget.jsonl'):
+    r=json.loads(ln); print('%-12s n=%d consistency=%.4f (%.1f%%) V=%.4f collapse=%.4f' %
+        (r['tag'], r['n'], r['consistency'], 100*r['consistency'], r['cramers_v'], r['collapse_index']))
+"
+```
+
+| tag | n | **consistency** | Cramér's V | collapse index |
+|---|---|---|---|---|
+| `prior_b10` | 72 | **15.28%** | 0.2371 | 0.4028 |
+| `prior_b25` | 72 | **50.00%** | 0.5015 | 0.4028 |
+| `prior_b50` | 72 | **52.78%** | 0.5725 | 0.4583 |
+| `prior_b100` | 72 | **37.50%** | 0.4732 | 0.4583 |
+
+| # | claim | **actual** | verdict |
+|---|---|---|---|
+| 9 | ≤ 53% at any budget | max = **52.78%** (b50) | **PASS** |
+| 10 | 15% at 215 crops | b10 = **15.28%**, and `abc_budget_b10.json` records `n_real = 215` | **PASS** |
+
+Both PASS. Two things the paper should carry alongside them: these are n = 72 checks, so the
+standard error on a ~50% estimate is ≈5.9 pp — the b25/b50 difference (50.0 vs 52.8) is well
+inside noise and must not be read as a trend. And **every budget has `collapsed: true`**
+(collapse index 0.40–0.46, all ≥ the 0.40 pre-registered line), which is the finding that
+makes the consistency numbers interpretable at all.
+
+---
+
+## 6.5 Filter keep-rate at b10
+
+**Source:** `results/abc_budget_b10_seeds.json`, field `keep_rate` (= `n_kept / n_synth`).
+
+```bash
+python3 -c "
+import json, statistics as st
+d=json.load(open('results/abc_budget_b10_seeds.json'))
+print('10-seed mean keep_rate = %.6f -> %.1f%%' % (st.mean([r['keep_rate'] for r in d]), 100*st.mean([r['keep_rate'] for r in d])))
+print('3-seed  mean keep_rate = %.1f%%' % (100*st.mean([r['keep_rate'] for r in json.load(open('results/abc_budget_b10.json'))])))
+"
+```
+
+**Actual:** per-seed 20.6, 23.1, 27.2, 25.8, 25.3, 26.9, 25.3, 23.3, 29.7, 27.8 %;
+mean = **0.255000 exactly → 25.5%** (n_kept 74+83+98+93+91+97+91+84+107+100 = 918; 918/3600).
+
+**Claim 11: PASS**, with a qualification the paper must state: **25.5% is the 10-seed run.**
+The 3-seed `abc_budget_b10.json` — the run behind Table 1's b10 row — gives **23.0%**. Both
+are correct for their own run; quoting 25.5% next to Table 1's b10 column mixes them.
+
+---
+
+## 6.6 Reconstructions and prior NLL
+
+### Claim 12 — reconstructions classify at 0.918: **PASS**
+
+**Source:** `results/recon_sanity.json`, field `macro_f1`.
+**Actual: 0.918217** (n = 518, judge `checkpoint/classifier_Atight_b100_s0.pt`, VQ-VAE
+`checkpoint/vqvae_tight_560.pt`).
+
+```bash
+python3 -c "import json; d=json.load(open('results/recon_sanity.json')); print(d['macro_f1'], d['n'], d['judge'], d['vqvae'])"
+```
+
+The paired framing in `findings.md:80` — "reads real crops at 0.926 and VQ-VAE reconstructions
+at 0.918" — is internally consistent: the same seed-0 judge scores **0.925527** on the real
+518 test crops (`classifier_Atight_b100_s0.json`) and **0.918217** on reconstructions of those
+same crops. Same model, same images, one round-trip apart. Both are single-seed values, which
+is correct here — it is a paired instrument check, not a 3-seed result.
+
+### Claim 13 — "held-out prior NLL is worse than a uniform prior": **MISMATCH if unqualified**
+
+**Source:** `results/prior_nll.json`, field `[i]["top"|"bottom"]["heldout_nll"]`.
+**Reference:** a uniform prior over the 512-way codebook has NLL = ln(512) = **6.238 nats/code**
+(`eval_prior_nll.py:37` `CHANCE = math.log(512)`, documented at line 21).
+
+```bash
+python3 -c "
+import json, math
+ch=math.log(512); print('uniform =', round(ch,4), 'nats/code')
+for r in json.load(open('results/prior_nll.json')):
+    print('ep %3d  top %.4f (%s)   bottom %.4f (%s)' % (r['epoch'],
+        r['top']['heldout_nll'], 'WORSE' if r['top']['heldout_nll']>ch else 'better',
+        r['bottom']['heldout_nll'], 'WORSE' if r['bottom']['heldout_nll']>ch else 'better'))
+"
+```
+
+| epoch | top held-out NLL | vs uniform | bottom held-out NLL | vs uniform |
+|---|---|---|---|---|
+| 80 | 3.4173 | better | 7.6501 | **worse** |
+| 120 | 3.9681 | better | 8.5653 | **worse** |
+| 160 | 4.2677 | better | 9.0997 | **worse** |
+| 200 | 4.6529 | better | 9.6714 | **worse** |
+| 240 | 4.7885 | better | 10.0645 | **worse** |
+| 280 | 5.0465 | better | 10.4924 | **worse** |
+| 320 | 5.1235 | better | 10.8456 | **worse** |
+
+**The claim is true of the bottom prior at every recorded epoch, and false of the top prior at
+every recorded epoch** (5.12 < 6.238 at epoch 320 — the top prior beats uniform by 1.1 nats).
+
+As written the claim overstates. The defensible statement is: *"the **bottom** prior's held-out
+NLL is worse than a uniform prior over the codebook at every epoch (10.85 vs 6.24 nats/code at
+320), and rises monotonically with training; the top prior stays below uniform (5.12) but also
+rises monotonically."* Both hierarchies show held-out NLL **increasing** while train NLL falls
+(top 0.0092, bottom 0.1960 at epoch 320) — that is the overfitting result, and it holds for
+both.
+
+One nuance worth a clause: the bottom prior's held-out *accuracy* is 4.78%, far above the
+1/512 = 0.195% a uniform prior gives. So it is not that the bottom prior knows nothing — it is
+badly calibrated, confidently wrong often enough to lose to uniform on log-loss.
+
+---
+
+## 6.7 Harm figures — claim 14 **[derived]**
+
+**Source:** `results/abc_budget_b{25,50,100}.json`. **Field:** mean `B.macro_f1` − mean `A.macro_f1`.
+
+```bash
+python3 -c "
+import json, statistics as st
+for b in [25,50,100]:
+    d=json.load(open(f'results/abc_budget_b{b}.json'))
+    a=st.mean([r['A']['macro_f1'] for r in d]); x=st.mean([r['B']['macro_f1'] for r in d])
+    print('b%-4d A=%.6f B=%.6f  B-A=%+.6f' % (b,a,x,x-a))
+"
+```
+
+| budget | claimed | **actual** | verdict |
+|---|---|---|---|
+| 25% | −0.046 | **−0.045687** | **PASS** |
+| 50% | −0.044 | **−0.044213** | **PASS** |
+| 100% | −0.052 | **−0.051530** | **PASS** |
+
+All three **PASS**. (At 10% the difference is +0.012, positive — which is why the claim is
+scoped to "above 10%".) These are differences of 3-seed means, not paired per-seed statistics;
+the only budget with a paired test is b10 (§2), where the effect is null.
+
+---
+
+## 6.8 Derived claims
+
+### Claim 15 — "+0.49 leaky gain": **MISMATCH (cross-experiment subtraction)**
+
+The leaky ceiling `B_pool` at b10 is **0.909555** (`abc_recon.json`, verified §1.2). The gain
+depends entirely on *which* Condition-A it is subtracted from — and there are three, from three
+different runs:
+
+```bash
+python3 -c "
+import json, statistics as st
+R=json.load(open('results/abc_recon.json'))
+bp=st.mean([r['B_pool']['macro_f1'] for r in R if abs(r['budget']-0.1)<1e-9])
+ar=st.mean([r['A']['macro_f1'] for r in R if abs(r['budget']-0.1)<1e-9])
+ab=st.mean([r['A']['macro_f1'] for r in json.load(open('results/abc_budget_b10.json'))])
+as_=st.mean([r['A']['macro_f1'] for r in json.load(open('results/abc_budget_b10_seeds.json'))])
+print('B_pool %.6f' % bp)
+for n,a in [('abc_recon A (SAME file)',ar),('abc_budget_b10 A',ab),('abc_budget_b10_seeds A',as_)]:
+    print('  minus %-26s %.6f = %+.6f -> %+.2f' % (n,a,bp-a,bp-a))
+"
+```
+
+| Condition-A used | value | gain | rounds to |
+|---|---|---|---|
+| **`abc_recon.json` — the same file, same run** | 0.399530 | **+0.510025** | **+0.51** |
+| `abc_budget_b10.json` — a different experiment | 0.418598 | +0.490957 | +0.49 |
+| `abc_budget_b10_seeds.json` — a third run | 0.432452 | +0.477103 | +0.48 |
+
+**+0.49 is obtainable only by subtracting one experiment's Condition-A from another
+experiment's B_pool.** `abc_recon.py` trains its own Condition-A inline, in the same process,
+on the same subsample, for exactly this comparison (`abc_recon.py:143`), and that model scores
+0.399530. The within-experiment gain is **+0.51**, which is what `findings.md:124` and
+`plot_budget_abc.py:11` both report.
+
+The three A values differ because of the run-to-run nondeterminism documented in §"Two further
+observations" (±0.004) *plus*, for the 10-seed file, a different seed set. Mixing them is not a
+rounding difference; it is a comparison between two models that never met.
+
+**Use +0.51.** If the paper needs the more conservative figure it should say which two runs are
+being differenced and why.
+
+### Claims 16–17 — detection floor and MDE **[derived]**
+
+```bash
+python3 -c "
+import json, math, statistics as st
+from scipy import stats
+d=json.load(open('results/abc_budget_b10_seeds.json'))
+diff=[r['B']['macro_f1']-r['A']['macro_f1'] for r in d]; n=len(diff)
+se=st.stdev(diff)/math.sqrt(n)
+z=(stats.norm.ppf(.975)+stats.norm.ppf(.80))*se
+t=(stats.t.ppf(.975,n-1)+stats.t.ppf(.80,n-1))*se
+print('sd=%.6f se=%.6f' % (st.stdev(diff), se))
+print('MDE normal-approx = %.6f ; MDE exact-t = %.6f' % (z,t))
+for g,lbl in [(0.510025,'+0.510'),(0.490957,'+0.491')]:
+    print('  %s / %.6f = %.2fx   |   / %.6f = %.2fx' % (lbl,z,g/z,t,g/t))
+"
+```
+
+**Actual:** sd of paired differences 0.031473, se 0.009953.
+
+| MDE formula | value | rounds to |
+|---|---|---|
+| normal approximation, (z₀.₉₇₅ + z₀.₈₀)·se | **0.027883** | **0.028** |
+| exact paired-t, (t₀.₉₇₅,₉ + t₀.₈₀,₉)·se | **0.031306** | 0.031 |
+
+**Claim 17: PASS** under the normal approximation — which is what `logs/b10_seeds.log:33-35`
+used ("about +0.0279"). With only 10 seeds the exact t-based MDE (**±0.031**) is the more
+honest figure; the normal approximation understates the detectable effect by ~11% at df = 9.
+Either is defensible if stated; **±0.028 should be labelled as the normal-approximation value.**
+
+**Claim 16: PASS on rounding**, but it is doubly contingent:
+
+| gain ÷ MDE | normal-approx MDE | exact-t MDE |
+|---|---|---|
+| +0.510 (within-experiment) | **18.29×** | 16.29× |
+| +0.491 (cross-experiment) | 17.61× | 15.68× |
+
+Only the top-left cell gives "18×". With the same +0.51 gain but the exact-t MDE it is 16×;
+with the cross-experiment +0.49 gain it is 18× only after rounding 17.61. The claim survives
+as stated, but "**more than an order of magnitude above what this design could detect**" is
+robust across all four cells and is what the paper should say.
+
+### Claim 18 — full-data baseline 0.918: **PASS but ambiguous**
+
+Two *different* quantities both round to 0.918, and the paper uses "0.918" for both:
+
+| quantity | source | value |
+|---|---|---|
+| classifier on **real** full-data train pool, 3-seed mean | `abc_recon.json` A @ budget 1.0 | **0.917775** |
+| seed-0 judge on **VQ-VAE reconstructions** of the 518 test crops | `results/recon_sanity.json` | **0.918217** |
+
+Both round to 0.918 by coincidence, not by construction — they measure different things (a
+training-data ceiling vs a decoder-fidelity check). The "leaky ceiling" sentence in
+`plot_budget_abc.py:11-12` ("0.910 against a full-data ceiling of 0.918") means the **first**.
+The "reconstructions classify at 0.918" sentence means the **second**. Both are correct;
+using one number for both invites the reader to think a single measurement is being reused.
+Recommend printing them to a decimal that separates them, or naming each explicitly.
+
+---
+
+## 6.9 Dataset facts
+
+Computed from the VOC annotation XML — the primary source — not from any derived manifest.
+
+```bash
+python3 -c "
+import glob, os, statistics as st, sys
+import xml.etree.ElementTree as ET
+sys.path.insert(0,'.')
+from pcb_utils import parse_filename
+ws=hs=None; ws=[]; hs=[]; areas=[]; n=0
+for x in sorted(glob.glob('VOC_PCB/Annotations/*.xml')):
+    p=parse_filename(os.path.basename(x)[:-4]+'.jpg')
+    if p is None or p['variant']!='plain': continue
+    n+=1
+    for o in ET.parse(x).getroot().findall('object'):
+        b=o.find('bndbox')
+        w=int(b.find('xmax').text)-int(b.find('xmin').text)
+        h=int(b.find('ymax').text)-int(b.find('ymin').text)
+        ws.append(w); hs.append(h); areas.append(w*h)
+print('plain base crops %d ; bboxes %d' % (n,len(ws)))
+print('median w=%.1f h=%.1f ; median area=%.1f px2 = %.4f%% of 600x600' % (st.median(ws),st.median(hs),st.median(areas),100*st.median(areas)/360000))
+"
+```
+
+| # | claim | source | **actual** | verdict |
+|---|---|---|---|---|
+| 19 | median defect 27×27 px | VOC XML, 5 416 bboxes over 2 667 plain crops | **median w = 27.0, median h = 27.0** | **PASS** |
+| 20 | ≈0.2% of frame **[derived]** | median bbox area ÷ 600² | **754 px² = 0.2094%**; 27×27 = 729 px² = 0.2025% | **PASS** |
+| 21 | 518 test crops | `manifest_tight.csv`, `split==test & variant==plain` | **518** (boards 06, 09) | **PASS** |
+| 22 | 2 149 primary train-pool crops | `manifest_tight.csv`, `split==train & variant==plain` | **2 149** | **PASS** |
+| 23 | budgets 215 / 537 / 1 075 / 2 149 | `abc_budget_b*.json` `n_real`; `budget_subsamples.json` `n_train` | **215 / 537 / 1 075 / 2 149**, identical across seeds, and agreeing across both files | **PASS** |
+| 24 | 10 boards | `results/splits.json` | **8 train + 2 test = 10** | **PASS** |
+| 25 | 6 classes | `results/splits.json` `classes` | **6** | **PASS** |
+| 26 | primary = defect nearest the frame centre | `make_tight_crops.py:63` | `prim = argmin(hypot(cx-300, cy-300))` | **PASS** |
+
+**Claim 20 — which "fraction of frame".** Both the paper's ≈0.2% (area) and `findings.md:51`'s
+"~4.5% of frame" are arithmetically right but measure different things: 0.2% is the **area**
+fraction (729/360 000), 4.5% is the **linear** fraction (27/600). For an argument about how
+many pixels the defect occupies — which is the paper's argument — **0.2% (area) is the correct
+one**. `findings.md`'s "~4.5% of frame" should read "~4.5% of frame width".
+
+**Claim 26 — verified in code, and it binds.** 1 687 of 2 667 base crops (63%) contain more
+than one annotated defect (distribution: 980 single, 934 two, 492 three, 213 four, 48 five), so
+the primary rule is doing real work, not describing an edge case. It also explains the two
+manifest sizes exactly: 5 416 total bboxes = 4 274 train (all of them, the per-bbox set) +
+1 142 test; the matched set keeps one primary per base crop, giving 2 149 train + 518 test.
+Those five counts are mutually consistent across `manifest_tight.csv`,
+`manifest_tight_perbbox.csv`, `manifest_nodefect.csv` and the raw XML.
+
+---
+
+## 6.10 What to change in the paper
+
+Ranked by consequence. Nothing here changes a conclusion; four items change a printed number.
+
+1. **TIGHT size-matched is 0.897 ± 0.020, not 0.900 ± 0.018** (claim 2). Take the value from
+   `results/paper_tables.md`, which is generated; the hand-written restatements in
+   `findings.md` are also wrong, differently.
+2. **The binary baseline at 10% is 0.841, not 0.838** (claim 4). 0.838 is seed 0 alone, and
+   pairing it with the +0.018 gain is internally inconsistent.
+3. **The leaky gain is +0.51, not +0.49** (claim 15). +0.49 subtracts a different experiment's
+   Condition-A from `abc_recon`'s B_pool.
+4. **Scope the NLL claim to the bottom prior** (claim 13). The top prior's held-out NLL is
+   *better* than uniform at every epoch.
+5. Label **±0.028 as the normal-approximation MDE** (claim 17); the exact paired-t value is
+   ±0.031. Prefer "more than an order of magnitude above the detection floor" to "18×"
+   (claim 16), which holds only for one of four defensible pairings.
+6. State that the **25.5% keep-rate is the 10-seed run** (claim 11); Table 1's b10 row rests on
+   the 3-seed run, where it is 23.0%.
+7. Write the binary bound as **"< +0.008"** rather than "≤ +0.007" (claim 7); the true maximum
+   is +0.0074.
+8. Disambiguate the **two 0.918s** (claim 18) — full-data real baseline 0.9178 vs reconstruction
+   fidelity 0.9182.
+9. In `findings.md`, "~4.5% of frame" should read **"~4.5% of frame width"** (claim 20).
+
+---
+
+## §6 verdict
+
+Of 26 numbers: **20 PASS**, **2 PASS with a qualification that must be printed** (claims 7, 16),
+**4 MISMATCH** (claims 2, 4, 13, 15).
+
+Every mismatch is a transcription or pairing error in the write-up, not an error in the
+experiments: in all four cases the raw result files contain the correct value, and in three of
+the four a generated artefact (`results/paper_tables.md`, `logs/b10_seeds.log`,
+`plot_budget_abc.py`'s own summary) already prints it correctly. No re-run is required to fix
+any of them. The direction and significance of every claim survives correction — the corrected
+crop-scale effect is +0.651 instead of +0.654, the corrected binary gain is +0.018 against a
+0.841 baseline, and the corrected leaky gain is larger, not smaller, than published.
