@@ -64,6 +64,12 @@ Written or modified for the paper **[mtime]**:
 | `randomlyCopyImageFiles.py` | 2024-12-04 |
 | `augmentGoodPCBImages.py` | 2024-12-23 |
 
+> **Amended 2026-07-28.** `augmentMVTecImageFiles.py` (this table) and
+> `pixelsnail_mnist.py` (the upstream list above) were **removed from git tracking**
+> on 2026-07-28 and are no longer in the repository, though both remain on disk.
+> The entries above are retained unchanged because they are statements about the
+> Dec-2024 working state, which the untracking does not alter. See §5.
+
 ### 2.2 `dataset.py` and `pixelsnail.py` — recovered
 
 `dataset.py` and `pixelsnail.py` were both edited in place during the ICETA work
@@ -351,3 +357,78 @@ Dates in §1 and §2 marked **[mtime]** are filesystem metadata, which is mutabl
 and carries no cryptographic guarantee. They are consistent across ~60 files and
 with a clean 18-month gap, which is good evidence, but it is not the same as a
 commit.
+
+---
+
+## 5. Amendments
+
+This document is amended by appending, never by editing an earlier statement.
+Sections 1–4 record what was true when compiled on 2026-07-27 and are left intact
+even where a later change has overtaken them; each amendment below says which
+statements it overtakes.
+
+### 5.1 Pre-publication cleanup — 2026-07-28
+
+Two commits after the original, both tagged in turn as `iceta-2026-submission`.
+No history was rewritten: the 2026-07-27 commit is unchanged and still in the
+history, and `icce-tw-2026` still points at `ef5f67c`, byte-exact.
+
+**Files removed from git tracking.** All three belong to neither paper, and no
+tracked file imports or invokes any of them. **All three remain on disk** and are
+now listed in `.gitignore` so that `git status` stays clean:
+
+| file | referenced in | why untracked |
+|---|---|---|
+| `augmentMVTecImageFiles.py` | §2.1 table | MVTec `transistor/train/good` → `PCB-cropped-combined`; belongs to neither paper's results |
+| `pixelsnail_mnist.py` | §2.1 list, §2.2 | upstream MNIST demo, never used here |
+| `eval_demo_pool.py` | — | 2026-07 talk-demo helper, referenced by nothing at all |
+
+Their appearances in §2.1 and §2.2 are **retained deliberately**. Those are
+statements about the Dec-2024 working state and about 2024-11-30 mtimes; both
+remain true, and the files remain on disk to be inspected. Specifically, the
+mtime argument in §2.2 — that `train_pixelsnail.py` shares a nanosecond-identical
+mtime with `vqvae.py` and lands within 3 ms of `scheduler.py`, `extract_code.py`
+and `pixelsnail_mnist.py`, the signature of a single checkout — is unaffected.
+
+**One removal was reverted.** `randomlyCopyImageFiles.py` (§2.1 table) was
+untracked in the first cleanup commit as an assumed MVTec leftover and **restored
+in the second**, byte-identical (blob `a8fcabd`). It is not MVTec work: it copies
+`PCB-cropped/all` → `PCB-cropped-combined`, i.e. it is the PCB half of the
+PCB-plus-MVTec combination experiment, and is ICCE-TW-era provenance. It is
+tracked, and §2.1's entry for it stands unqualified.
+
+**Line endings normalised.** The 2024-era sources were committed with CRLF while
+every 2026 ICETA-era script is LF. Seven tracked files — `dataset.py`,
+`extract_code.py`, `pixelsnail.py`, `train_pixelsnail.py`, `train_vqvae.py`,
+`train_vqvae-trainVal-allTransformations.py`, `vqvae.py` — were converted to LF.
+The change is whitespace-only (`git diff -w` empty for each; each byte-identical
+to its predecessor after stripping CR) and all still load their published
+checkpoints at `strict=True`. `.gitattributes` now pins the convention, with an
+explicit `results/*.csv -text` exception: those manifests are CRLF by construction
+(Python's `csv` writer with `newline=''`) and their exact bytes back the split and
+subsample provenance, so they are never renormalised. Verified: every
+`results/*.csv` blob hash is unchanged under the new attributes.
+
+This normalisation does **not** touch anything §2 relies on. `icce-tw-2026`
+(`ef5f67c`) still carries `pixelsnail.py` at 431 CRLF lines, so the byte-level
+comparisons in §2.2 against upstream remain reproducible against that tag.
+
+**Files added.** `AUDIT.md` (independent adversarial verification of Table 1, the
+10-seed paired test, the leakage controls, the synthetic-pool counts and the
+filter identity), `REPRODUCE.md` (each claim → the command that regenerates it,
+plus the limits on exact reproduction), `.gitattributes`, and
+`results/overfit_matrix.json`.
+
+**A gap in §2.4's spirit, now closed.** `test_overfit_matrix.py` previously
+persisted only a PNG that records no metrics, so its result could not be
+recovered without re-running it — the same failure mode §2.4 documents for the
+ICCE-TW results. It now writes `results/overfit_matrix.json`. The committed file
+is from a 2026-07-28 run, not the 2026-07-13 original, whose numbers were never
+recorded anywhere and are unrecoverable.
+
+**Overtaken statement.** The header says the tier-1 source state was committed
+"as the single commit tagged `iceta-2026-submission`". That remains true of
+2026-07-27; as of 2026-07-28 the tag points at the later cleanup commit and the
+submission state spans three commits. The header's convention of referring to
+tags by name rather than by hash is what keeps the rest of this document valid
+across that move.

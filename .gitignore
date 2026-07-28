@@ -150,3 +150,11 @@ demo_timelapse/
 !figures/
 !figures/*.png
 !results/
+
+# Untracked on 2026-07-28: belong to neither paper, imported and invoked by
+# nothing. Kept on disk as historical scratch; ignored so `git status` stays
+# clean. See PROVENANCE.md section 5. (randomlyCopyImageFiles.py was untracked
+# in the same pass and RESTORED — it is ICCE-TW-era PCB work, not MVTec.)
+/augmentMVTecImageFiles.py
+/pixelsnail_mnist.py
+/eval_demo_pool.py
