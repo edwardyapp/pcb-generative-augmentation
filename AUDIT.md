@@ -769,6 +769,30 @@ noted as the likeliest transcription origin, not as an established one.
 **Use 0.897 ± 0.020.** Nothing else in the paper depends on which of the three is printed —
 see claim 3.
 
+#### Out-of-scope correction made 2026-07-30: the accuracy cell in the same row
+
+This claim was scoped to macro-F1, so the *accuracy* column of `findings.md:34` was not
+checked when it was written. It is also wrong. The row read:
+
+```
+| TIGHT matched | 2149 | 0.896 ± 0.018 | 0.898 |
+                          ^ macro-F1      ^ accuracy
+```
+
+Recomputed from the same three files, `accuracy` is **0.895753 ± 0.021206** (population std).
+No field yields 0.898. Both cells were corrected together, to `0.897 ± 0.020` and `0.896`,
+because leaving a demonstrably wrong number in the row while fixing its neighbour would have
+left a public reader with the same problem this audit exists to remove — three values in
+circulation for one result.
+
+`results/paper_tables.md:8` already printed `0.896 ± 0.021` for accuracy and needed no change.
+After the correction `findings.md`, `results/paper_tables.md` and this file agree on both
+fields.
+
+The correction is recorded here rather than folded into claim 2 above, because claim 2's
+verdict was reached on a narrower question and its scope should not be rewritten after the
+fact. Nothing derived depends on the accuracy figure.
+
 ### Claim 3 — the 93% decomposition **[derived]**
 
 ```bash

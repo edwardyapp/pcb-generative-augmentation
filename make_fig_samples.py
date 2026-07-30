@@ -45,21 +45,24 @@ TILE, GAP = 256, 4
 SEED = 0
 DPI = 600
 
-# Label sizing is driven by the PRINTED size, not by the pixel size: the figure
-# is placed at PRINT_WIDTH_IN inches, and a label of N px in a W px-wide figure
-# then sets N/W * PRINT_WIDTH_IN * 72 points. 58 px in the current 839 px figure
-# is 9.96 pt at 2.0 in, i.e. matched to 10 pt body text.
+# Label sizing is driven by the PRINTED size, not by a pixel constant: a label
+# of N px in a W px-wide figure placed at PRINT_WIDTH_IN inches occupies
+# N/W * PRINT_WIDTH_IN * 72 points. TARGET_PT is the body-text size to match.
 #
-# Targets are requests, not guarantees. fit_font caps each so nothing overruns a
-# 256 px tile, and returns the largest size that fits:
-#   - column labels wrap at the underscore; the widest token must fit the tile
-#     WIDTH. "missing" is 222 px at 58, so the target is met.
-#   - row labels are rotated 90 deg, so their length runs along the tile
-#     HEIGHT. "generated" is 331 px at 64 and 300 px at 58, both of which
-#     overrun a 256 px row -> capped at 49 px (8.4 pt), the largest that fits.
-#     Rows therefore cannot reach 10 pt at this print width; see NOTE output.
-PRINT_WIDTH_IN = 2.0
-TARGET_COL, TARGET_ROW = 58, 58
+# PRINT_WIDTH_IN is MEASURED, not assumed: 2.500 in = 2286000 EMU, read from
+# wp:extent in the submitted .docx (which is not in this repository). It is the
+# single input that sets both label sizes -- change it and solve_px re-solves.
+#
+# The pixel size is solved rather than hard-coded because W itself depends on
+# the row font (the gutter is sized to the rotated label's height), so px and W
+# are mutually dependent. solve_px iterates the fixed point; it converges in
+# two passes because W moves only a few px across the plausible range.
+#
+# fit_font then caps each label so nothing overruns a 256 px tile, returning the
+# largest size that fits. At 2.5 in the solved size is ~46 px and NEITHER cap
+# binds -- at 2.0 in the row cap did bind at 49 px, holding rows to 8.4 pt.
+PRINT_WIDTH_IN = 2.5
+TARGET_PT = 10.0
 MARGIN = 2          # was 6; trimmed so the enlarged labels cost the tiles less
 GUTTER_PAD = 12     # around the rotated row label
 HEADER_PAD = 8      # between the column label block and the tile top
@@ -125,6 +128,30 @@ def fit_font(strings, limit, target):
     raise SystemExit(f"no font <= {target}px fits {strings} in {limit}px")
 
 
+def figure_width(row_px):
+    """Figure width in px. Depends on the ROW font only: the gutter is sized to
+    the rotated label's height. Column font affects height, not width."""
+    d = _probe()
+    f = load_font(row_px)
+    row_h = max(text_size(d, r, f)[1] for r in ("real", "generated"))
+    return MARGIN + (row_h + GUTTER_PAD) + 3 * TILE + 2 * GAP + MARGIN
+
+
+def solve_px(target_pt):
+    """Pixel size whose printed size is target_pt at PRINT_WIDTH_IN.
+
+    px = target_pt * W / (PRINT_WIDTH_IN * 72), but W depends on px through the
+    gutter, so iterate to the fixed point."""
+    px = 50
+    for _ in range(8):
+        capped = fit_font(["real", "generated"], TILE, max(6, int(round(px))))
+        nxt = target_pt * figure_width(capped) / (PRINT_WIDTH_IN * 72.0)
+        if int(round(nxt)) == int(round(px)):
+            break
+        px = nxt
+    return max(6, int(round(px)))
+
+
 def text_size(draw, s, font):
     b = draw.textbbox((0, 0), s, font=font)
     return b[2] - b[0], b[3] - b[1]
@@ -143,9 +170,11 @@ def render_text(s, font, fill="black"):
 def geometry():
     """Shared by the PNG and PDF paths so the two renderings agree."""
     d = _probe()
-    # column labels lie along the tile width; rotated row labels along its height
-    col_px = fit_font([w for c in CLASSES for w in wrap(c)], TILE, TARGET_COL)
-    row_px = fit_font(["real", "generated"], TILE, TARGET_ROW)
+    # Both labels want the same printed size, so both start from one solved
+    # pixel size; fit_font then caps each against the 256 px tile.
+    want_px = solve_px(TARGET_PT)
+    col_px = fit_font([w for c in CLASSES for w in wrap(c)], TILE, want_px)
+    row_px = fit_font(["real", "generated"], TILE, want_px)
     f_col, f_row = load_font(col_px), load_font(row_px)
 
     line_h = max(text_size(d, "Ag", f_col)[1] for _ in (0,))
@@ -154,9 +183,9 @@ def geometry():
     header_h = n_lines * line_h + (n_lines - 1) * lead + HEADER_PAD
 
     row_w = max(text_size(d, r, f_row)[0] for r in ("real", "generated"))
-    # extent the row label WOULD have at the requested size, for the note
-    f_target = load_font(TARGET_ROW)
-    row_w_target = max(text_size(d, r, f_target)[0] for r in ("real", "generated"))
+    # extent the row label WOULD have at the solved size, for the note
+    f_want = load_font(want_px)
+    row_w_target = max(text_size(d, r, f_want)[0] for r in ("real", "generated"))
     row_h = max(text_size(d, r, f_row)[1] for r in ("real", "generated"))
     gutter_w = row_h + GUTTER_PAD          # rotated: height becomes width
 
@@ -166,7 +195,7 @@ def geometry():
                 line_h=line_h, lead=lead, row_w=row_w, row_h=row_h,
                 x0=MARGIN + gutter_w, y0=MARGIN + header_h,
                 f_col=f_col, f_row=f_row, col_px=col_px, row_px=row_px,
-                row_w_target=row_w_target)
+                row_w_target=row_w_target, want_px=want_px)
 
 
 def assert_no_clipping(fig):
@@ -286,6 +315,15 @@ def main():
     out = draw_png(picks, g)
     pdf = draw_pdf(picks, g)
 
+    col_note = (f"{g['col_px']} px = {pt(g['col_px'], g['W']):.1f} pt "
+                + ("(tile-width cap not binding)" if g["col_px"] == g["want_px"]
+                   else f"CAPPED from {g['want_px']} px to fit the {TILE} px tile"))
+    row_note = (f"{g['row_px']} px = {pt(g['row_px'], g['W']):.1f} pt "
+                + (f"(rotated label spans {g['row_w']} px against a {TILE} px "
+                   "row; cap not binding)" if g["row_px"] == g["want_px"]
+                   else f"CAPPED: at {g['want_px']} px the rotated label would "
+                        f"span {g['row_w_target']} px against a {TILE} px row"))
+
     note = os.path.join(ROOT, "fig_samples_NOTE.txt")
     with open(note, "w") as fh:
         fh.write(
@@ -299,18 +337,15 @@ def main():
             f"tiles 256x256 as-is; {DPI} dpi\n"
             "also written: fig_samples.pdf (same layout, same tiles; vector "
             "text, embedded rasters)\n"
-            f"figure {g['W']}x{g['H']} px; placed at {PRINT_WIDTH_IN} in wide\n"
-            f"column labels: wrap at the underscore, {g['col_px']} px = "
-            f"{pt(g['col_px'], g['W']):.1f} pt at that width "
-            f"(target {TARGET_COL} px, cap not binding)\n"
-            f"row labels: rotated 90 deg, {g['row_px']} px = "
-            f"{pt(g['row_px'], g['W']):.1f} pt at that width "
-            f"(target {TARGET_ROW} px CAPPED: at {TARGET_ROW} px the rotated "
-            f"label would span {g['row_w_target']} px against a {TILE} px row, "
-            f"so it is reduced to {g['row_px']} px / {g['row_w']} px, the "
-            "largest that fits without clipping)\n"
-            f"if the figure is placed at another width, multiply by "
-            f"(width / {PRINT_WIDTH_IN})\n"
+            f"figure {g['W']}x{g['H']} px\n"
+            f"placed at {PRINT_WIDTH_IN:.3f} in wide — MEASURED from wp:extent "
+            "in the submitted .docx (2286000 EMU), not assumed\n"
+            f"labels target {TARGET_PT:.0f} pt body text at that width; solved "
+            f"size {g['want_px']} px\n"
+            f"column labels: wrap at the underscore, {col_note}\n"
+            f"row labels: rotated 90 deg, {row_note}\n"
+            f"if the figure is placed at another width, multiply both by "
+            f"(width / {PRINT_WIDTH_IN:.3f})\n"
             "\nchosen files:\n")
         for (row, cls), p in picks.items():
             fh.write(f"  {row:9s} {cls:13s} {os.path.relpath(p, ROOT)}\n")

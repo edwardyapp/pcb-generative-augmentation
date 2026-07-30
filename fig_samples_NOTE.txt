@@ -5,10 +5,12 @@ real pool: PCB-cropped-tight/all, un-augmented originals only (no rotation_/l_ v
 generated pool: synth_b100 (b100 conditional generator)
 tiles 256x256 as-is; 600 dpi
 also written: fig_samples.pdf (same layout, same tiles; vector text, embedded rasters)
-figure 839x646 px; placed at 2.0 in wide
-column labels: wrap at the underscore, 58 px = 10.0 pt at that width (target 58 px, cap not binding)
-row labels: rotated 90 deg, 49 px = 8.4 pt at that width (target 58 px CAPPED: at 58 px the rotated label would span 300 px against a 256 px row, so it is reduced to 49 px / 253 px, the largest that fits without clipping)
-if the figure is placed at another width, multiply by (width / 2.0)
+figure 838x624 px
+placed at 2.500 in wide — MEASURED from wp:extent in the submitted .docx (2286000 EMU), not assumed
+labels target 10 pt body text at that width; solved size 47 px
+column labels: wrap at the underscore, 47 px = 10.1 pt (tile-width cap not binding)
+row labels: rotated 90 deg, 47 px = 10.1 pt (rotated label spans 243 px against a 256 px row; cap not binding)
+if the figure is placed at another width, multiply both by (width / 2.500)
 
 chosen files:
   real      missing_hole  PCB-cropped-tight/all/light_12_missing_hole_08_1_600__b0.png
