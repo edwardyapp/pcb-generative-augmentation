@@ -3,7 +3,9 @@ seed: random.Random(0), single instance
 draw order: real[missing_hole, short, spur], then generated[missing_hole, short, spur]; rng.choice(sorted(pool))
 real pool: PCB-cropped-tight/all, un-augmented originals only (no rotation_/l_ variants)
 generated pool: synth_b100 (b100 conditional generator)
-tiles 256x256 as-is; 300 dpi
+tiles 256x256 as-is; 600 dpi
+also written: fig_samples.pdf (same layout, same tiles; vector text, embedded rasters)
+labels enlarged for 2-inch print width: column labels wrap at the underscore (66 px), row labels rotated 90 deg (49 px); each capped to fit the 256 px tile
 
 chosen files:
   real      missing_hole  PCB-cropped-tight/all/light_12_missing_hole_08_1_600__b0.png
