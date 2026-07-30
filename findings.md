@@ -31,7 +31,7 @@ At 100% budget, **size-matched** (both 2149 training crops):
 | set | n_train | macro-F1 | accuracy |
 |---|---|---|---|
 | 600px (baseline) | 2149 | **0.246 ± 0.013** | 0.315 |
-| TIGHT matched | 2149 | **0.896 ± 0.018** | 0.898 |
+| TIGHT matched | 2149 | **0.897 ± 0.020** | 0.896 |
 | TIGHT per-bbox | 4274 | 0.947 ± 0.005 | 0.947 |
 
 - **Crop scale: +0.65 macro-F1 (+265%)**, with dataset size held fixed.
@@ -57,7 +57,7 @@ Cause: the median defect is **27×27 px inside a 600×600 crop** (~4.5% of frame
 | 10% | 0.144 ± 0.035 | **0.422 ± 0.036** |
 | 25% | 0.191 ± 0.029 | **0.640 ± 0.010** |
 | 50% | 0.252 ± 0.016 | **0.779 ± 0.007** |
-| 100% | 0.246 ± 0.013 | **0.896 ± 0.018** |
+| 100% | 0.246 ± 0.013 | **0.897 ± 0.020** |
 
 The 600px baseline is *at chance* at the 10% budget — the very regime the scarcity argument
 rests on. With correct crops, a plain ResNet-18 reaches **0.42 at 10%** and **0.90 at 100%**

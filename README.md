@@ -1,4 +1,4 @@
-# Crop scale, not generative AI, drives PCB defect classification
+# What Helps PCB Defect Classification: Crop Scale, Not Generative Augmentation
 
 Code and results for two papers on PCB defect generation and classification,
 built on [rosinality/vq-vae-2-pytorch](https://github.com/rosinality/vq-vae-2-pytorch):

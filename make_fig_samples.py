@@ -11,24 +11,24 @@ fig_samples_NOTE.txt.
 
 B/W-print safe: black text on white, no colour-coded annotations.
 
-Labels are sized for legibility at ~2-inch print width, targeting ~4x the
-original 17/16 px. Neither axis reaches a full 4x, because a 256 px tile is the
-hard limit in both directions and fit_font caps each to it:
-  - COLUMNS: "missing_hole" on one line is 441 px at 4x against a 256 px tile,
-    so column labels wrap at the underscore ("missing" / "hole"). "missing" is
-    253 px at 66 and 257 px at 67 -> 66 px, i.e. 3.9x.
-  - ROWS: horizontally, "generated" is 331 px against an 84 px gutter (largest
-    single-line fit 16 px = 1.0x), so row labels are rotated 90 deg. Rotation
-    trades the width limit for a height one: the label now runs along the
-    256 px tile height, where "generated" is 331 px at 4x and would clip. The
-    cap is 49 px, i.e. 3.1x.
+Labels are sized against the PRINTED width (PRINT_WIDTH_IN), to sit at 10 pt
+body text. A 256 px tile is the hard limit in both directions and fit_font caps
+each label to it, returning the largest size that fits:
+  - COLUMNS: "missing_hole" on one line is 388 px at 58 px against a 256 px
+    tile, so column labels wrap at the underscore ("missing" / "hole").
+    "missing" is then 222 px, so 58 px stands: 9.96 pt, i.e. 10 pt as intended.
+  - ROWS: horizontally, "generated" is 300 px at 58 px against an 84 px gutter,
+    so row labels are rotated 90 deg. Rotation trades the width limit for a
+    height one -- the label runs along the 256 px tile height, where
+    "generated" is still 300 px at 58 px. Capped at 49 px = 8.4 pt, the largest
+    that fits. Rows cannot reach 10 pt at this print width; the note file
+    records the actual value rather than the requested one.
 
-Net effect: the gutter shrinks 92 -> 59 px and the tiles' share of the figure
-width RISES, 87.3% -> 91.5%. At 2-inch print width the labels are ~11.3 pt
-(columns) and ~8.4 pt (rows), against ~2.8 / ~2.6 pt before.
+assert_no_clipping() fails the build if any ink reaches the canvas edge, so a
+cap that is set too high can never silently truncate a label.
 
-Tiles are pasted 1:1 at native 256x256 and are never resampled; enlarging the
-labels cannot alter tile pixels.
+Tiles are pasted 1:1 at native 256x256 and are never resampled; changing label
+sizes cannot alter tile pixels.
 
 Output: fig_samples.png (600 dpi), fig_samples.pdf (vector text, embedded
 rasters) and fig_samples_NOTE.txt in project root.
@@ -45,15 +45,21 @@ TILE, GAP = 256, 4
 SEED = 0
 DPI = 600
 
-# Target ~4x the original 17/16 px, then cap each so nothing overruns a 256 px
-# tile. Both caps are computed (see fit_font) rather than hard-coded, so the
-# figure cannot silently clip if a class name or font ever changes:
+# Label sizing is driven by the PRINTED size, not by the pixel size: the figure
+# is placed at PRINT_WIDTH_IN inches, and a label of N px in a W px-wide figure
+# then sets N/W * PRINT_WIDTH_IN * 72 points. 58 px in the current 839 px figure
+# is 9.96 pt at 2.0 in, i.e. matched to 10 pt body text.
+#
+# Targets are requests, not guarantees. fit_font caps each so nothing overruns a
+# 256 px tile, and returns the largest size that fits:
 #   - column labels wrap at the underscore; the widest token must fit the tile
-#     WIDTH. "missing" is 253 px at 66 and 257 px at 67 -> cap 66 (3.9x).
+#     WIDTH. "missing" is 222 px at 58, so the target is met.
 #   - row labels are rotated 90 deg, so their length runs along the tile
-#     HEIGHT. "generated" is 331 px at 64, which overran the 256 px row and
-#     clipped the "g" -> cap 49 (3.1x).
-TARGET_COL, TARGET_ROW = 68, 64
+#     HEIGHT. "generated" is 331 px at 64 and 300 px at 58, both of which
+#     overrun a 256 px row -> capped at 49 px (8.4 pt), the largest that fits.
+#     Rows therefore cannot reach 10 pt at this print width; see NOTE output.
+PRINT_WIDTH_IN = 2.0
+TARGET_COL, TARGET_ROW = 58, 58
 MARGIN = 2          # was 6; trimmed so the enlarged labels cost the tiles less
 GUTTER_PAD = 12     # around the rotated row label
 HEADER_PAD = 8      # between the column label block and the tile top
@@ -102,6 +108,12 @@ def _probe():
     return ImageDraw.Draw(Image.new("RGB", (8, 8)))
 
 
+def pt(px_size, fig_w):
+    """Point size a px-tall label occupies when the figure is printed at
+    PRINT_WIDTH_IN inches wide."""
+    return px_size / fig_w * PRINT_WIDTH_IN * 72.0
+
+
 def fit_font(strings, limit, target):
     """Largest size <= target at which every string measures <= limit px along
     its layout axis. Guards against silent clipping."""
@@ -142,6 +154,9 @@ def geometry():
     header_h = n_lines * line_h + (n_lines - 1) * lead + HEADER_PAD
 
     row_w = max(text_size(d, r, f_row)[0] for r in ("real", "generated"))
+    # extent the row label WOULD have at the requested size, for the note
+    f_target = load_font(TARGET_ROW)
+    row_w_target = max(text_size(d, r, f_target)[0] for r in ("real", "generated"))
     row_h = max(text_size(d, r, f_row)[1] for r in ("real", "generated"))
     gutter_w = row_h + GUTTER_PAD          # rotated: height becomes width
 
@@ -150,7 +165,25 @@ def geometry():
     return dict(W=W, H=H, header_h=header_h, gutter_w=gutter_w,
                 line_h=line_h, lead=lead, row_w=row_w, row_h=row_h,
                 x0=MARGIN + gutter_w, y0=MARGIN + header_h,
-                f_col=f_col, f_row=f_row, col_px=col_px, row_px=row_px)
+                f_col=f_col, f_row=f_row, col_px=col_px, row_px=row_px,
+                row_w_target=row_w_target)
+
+
+def assert_no_clipping(fig):
+    """Fail loudly if any ink reaches the canvas edge. An earlier revision drew
+    a rotated row label 331 px long into a 256 px row and silently clipped the
+    "g" off "generated"; the metrics all looked fine. This catches that."""
+    W, H = fig.size
+    px = fig.load()
+    ink = lambda x, y: sum(px[x, y][:3]) < 600
+    edges = {"top": [(x, 0) for x in range(W)],
+             "bottom": [(x, H - 1) for x in range(W)],
+             "left": [(0, y) for y in range(H)],
+             "right": [(W - 1, y) for y in range(H)]}
+    hits = {k: sum(1 for p in v if ink(*p)) for k, v in edges.items()}
+    bad = {k: n for k, n in hits.items() if n}
+    if bad:
+        raise SystemExit(f"content clipped at canvas edge: {bad}")
 
 
 def draw_png(picks, g):
@@ -182,6 +215,7 @@ def draw_png(picks, g):
                 raise SystemExit(f"{picks[(row, cls)]} is {im.size}, not 256x256")
             fig.paste(im, (g["x0"] + j * (TILE + GAP), ry))
 
+    assert_no_clipping(fig)
     out = os.path.join(ROOT, "fig_samples.png")
     fig.save(out, dpi=(DPI, DPI))
     return out
@@ -265,9 +299,18 @@ def main():
             f"tiles 256x256 as-is; {DPI} dpi\n"
             "also written: fig_samples.pdf (same layout, same tiles; vector "
             "text, embedded rasters)\n"
-            "labels enlarged for 2-inch print width: column labels wrap at the "
-            f"underscore ({g['col_px']} px), row labels rotated 90 deg "
-            f"({g['row_px']} px); each capped to fit the 256 px tile\n"
+            f"figure {g['W']}x{g['H']} px; placed at {PRINT_WIDTH_IN} in wide\n"
+            f"column labels: wrap at the underscore, {g['col_px']} px = "
+            f"{pt(g['col_px'], g['W']):.1f} pt at that width "
+            f"(target {TARGET_COL} px, cap not binding)\n"
+            f"row labels: rotated 90 deg, {g['row_px']} px = "
+            f"{pt(g['row_px'], g['W']):.1f} pt at that width "
+            f"(target {TARGET_ROW} px CAPPED: at {TARGET_ROW} px the rotated "
+            f"label would span {g['row_w_target']} px against a {TILE} px row, "
+            f"so it is reduced to {g['row_px']} px / {g['row_w']} px, the "
+            "largest that fits without clipping)\n"
+            f"if the figure is placed at another width, multiply by "
+            f"(width / {PRINT_WIDTH_IN})\n"
             "\nchosen files:\n")
         for (row, cls), p in picks.items():
             fh.write(f"  {row:9s} {cls:13s} {os.path.relpath(p, ROOT)}\n")

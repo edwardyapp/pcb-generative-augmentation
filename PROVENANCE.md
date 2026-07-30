@@ -26,6 +26,23 @@ mtimes are mutable filesystem metadata and carry no cryptographic guarantee.
 
 ---
 
+## 0. Paper titles — authoritative
+
+The submitted manuscripts are `.docx` files and are **not in this repository**.
+Their titles are recorded here so the repo has one authoritative source; every
+other mention (README H1, tag annotations) is derived from this section.
+
+| paper | title |
+|---|---|
+| ICETA 2026 | **What Helps PCB Defect Classification: Crop Scale, Not Generative Augmentation** |
+| ICCE-TW 2026 | *not recorded here — see §2* |
+
+`findings.md` opens with a **headline**, not a title: "Crop methodology, not
+generative AI, is what moves PCB defect classification." It paraphrases the
+argument and should not be cited as the paper's name.
+
+---
+
 ## 1. The two states
 
 | | ICCE-TW 2026 | ICETA 2026 |
