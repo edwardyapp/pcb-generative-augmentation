@@ -188,8 +188,9 @@ def main():
         lift = cell[best].mean() - a_m
         row += f'  best={best} {lift:+.3f} ' + ('LIFT' if lift > a_s else 'no lift (< A seed-std)')
         print(row)
-    print('\nInterpretation: B_pool/C_pool are the LEAKY ceiling (recon of the full train pool —')
-    print('labels you would not own at a 10% budget, but exactly what our prior was trained on).')
+    print('\nInterpretation: B_pool/C_pool are the RECONSTRUCTION ceiling (recon of the full train pool —')
+    print('labels you would not own at a 10% budget). No generator is involved; a generator trained on')
+    print('the full pool delivers +0.002 at 10% (results/abc_leaky_b*.json, AUDIT.md section 7).')
     print('B_self/C_self are the honest no-leak augmentation value. If even B_pool fails to lift A')
     print('at 10%/25%, no generator built on this pipeline can help.')
     print(f'\nwrote {args.out}')

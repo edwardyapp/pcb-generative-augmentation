@@ -282,7 +282,7 @@ expected to.
 | `results/manifest_tight_b{10,25,50}.csv`, `budget_subsamples.json` | `src/make_budget_subsamples.py` |
 | `results/abc_budget_b*.json` | `experiments/abc_budget.py` via `experiments/run_budget_pipeline.sh` |
 | `results/abc_budget_b10_seeds.json` | `experiments/abc_b10_seeds.py` |
-| `results/abc_recon.json` (leaky ceiling) | `experiments/abc_recon.py` |
+| `results/abc_recon.json` (reconstruction ceiling) | `experiments/abc_recon.py` |
 | `results/abc_binary.json` | `experiments/abc_binary.py` via `experiments/run_binary_track.sh` |
 | `results/classifier_*.json` | `src/train_classifier.py` |
 | `results/cond_checks*.jsonl` | `experiments/cond_check.py` |
