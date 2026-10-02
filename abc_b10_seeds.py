@@ -128,8 +128,16 @@ def report(recs):
     print(f'\n  POWER: with {n} seeds and a paired sd of {sd:.4f}, the smallest effect we could')
     print(f'  reliably detect is about {mde:+.4f} macro-F1. Anything smaller than that we cannot')
     print(f'  rule out — so the honest claim is "no effect larger than ~{mde:.3f}".')
-    print(f'\n  For scale: the LEAKY protocol (generator trained on the full pool) gives +0.510')
-    print(f'  at this same budget. That is {0.510/max(abs(mde),1e-9):.0f}x our detection floor.')
+    print(f'\n  For scale, at this same budget (3-seed runs, each against its own A):')
+    for label, path, key in (('full-pool generator  ', 'results/abc_leaky_b10.json', 'B'),
+                             ('reconstruction ceiling', 'results/abc_recon.json', 'B_pool')):
+        if not os.path.exists(path):
+            continue
+        rs = [r for r in json.load(open(path)) if abs(r['budget'] - 0.10) < 1e-9 or r['budget'] == 10]
+        d = np.mean([r[key]['macro_f1'] - r['A']['macro_f1'] for r in rs])
+        print(f'    {label.strip():22s} {d:+.3f}  ({abs(d)/max(abs(mde),1e-9):.1f}x the detection floor)')
+    print(f'  The ceiling uses no generator (VQ-VAE round-trips of all 2,149 real crops); it bounds')
+    print(f'  what images of this form could carry, not what a leaky generator delivers.')
     print(f'\n  filter keep-rate {100*np.mean([r["keep_rate"] for r in recs]):.1f}%')
     print(f'\nwrote {OUT}')
 

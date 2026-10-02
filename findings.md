@@ -4,7 +4,7 @@
 A size-matched change of crop scale is worth **+0.65 macro-F1**; the class-conditional
 generator the ICCE-TW paper advocates produces **no usable labeled synthetic defects**.
 
-Figures: `figures/fig1–fig6`, `fig11_budget_abc` (honest vs leaky curve). Numbers:
+Figures: `figures/fig1–fig6`, `fig11_budget_abc` (budget-restricted vs full-pool generator). Numbers:
 `results/paper_tables.md`, `results/abc_budget_b{10,25,50,100}.json`,
 `results/cond_check_ep320_n360_pooled.json`.
 
@@ -119,13 +119,22 @@ injection. The no-leakage filter functions as damage control: it discards half t
 fifths of the pool and returns performance to baseline, **never meaningfully above it**
 (best case +0.010 at 50%, within seed noise).
 
-**5c. The number the field would have reported is leakage.** Replacing generated samples
-with VQ-VAE reconstructions of the *full train pool* — the ceiling for any generator trained
-on all the data, as is standard practice — lifts the 10% budget from 0.400 to **0.910**,
-i.e. "+0.51 macro-F1 from synthetic data," fully recovering full-data performance. That gain
-is information smuggled from the other 90% of the dataset, not generation: the honest
-same-budget control caps at **+0.09**. Any scarcity experiment whose generator saw the full
-training set is measuring its own leak.
+**5c. The generator, not its data, is the bottleneck.** *(Revised 2026-10-02. The earlier
+text called +0.51 "leakage" a full-pool generator would report; AUDIT.md §7 shows that number
+involves no generator, and the claim is retracted.)* Three arms at the 10% budget, each
+against its own Condition A:
+
+| arm | what is added | B − A at 10% |
+|---|---|---|
+| budget-restricted generator | 360 samples, generator trained on the 10% subsample | +0.012 |
+| full-pool generator | 360 samples, generator trained on all 2,149 train crops | **+0.002** |
+| reconstruction ceiling | VQ-VAE round-trips of all 2,149 real crops, no generator | +0.510 |
+
+A generator that saw the whole training set buys nothing over one that saw 10% of it (and at
+25%/50% it hurts: −0.066 / −0.017), while merely round-tripping that training set through the
+same decoder buys +0.51. The failure is in generation, not in what the generator was allowed
+to see. Sources: `results/abc_budget_b*.json`, `results/abc_leaky_b*.json`,
+`results/abc_recon.json`; figures `fig11_budget_abc`, `fig10_abc_recon`.
 
 **Why it fails.** Not the autoencoder (recon classifies at 0.918), not plumbing (the label
 flips 70% of top-code predictions; teacher-forced code accuracy improved 0.41 → 0.61 with
@@ -178,9 +187,9 @@ synthetic positives still do not help.
   correct by construction — best case +0.018 at 10%, inside seed noise, and even the leaky
   pool moves nothing.
 - **Does the benefit grow as data gets scarcer?** The opposite direction is true twice over:
-  at low budgets the honest generator conditions *worse* (15.3% at b10 — chance), and the
-  only large "benefit" obtainable at 10% (+0.51) is demonstrable leakage from a full-pool
-  generator (Finding 5c). For **crop scale**, the benefit is large at every budget and the
+  at low budgets the honest generator conditions *worse* (15.3% at b10 — chance), and a
+  generator trained on the full pool does no better (+0.002 at 10%); the only large gain at
+  10% (+0.51) comes from reconstructions of real crops, with no generator involved (Finding 5c). For **crop scale**, the benefit is large at every budget and the
   corrected baseline retains real signal even at 10% (0.42 vs 0.14).
 - **What fraction of generated images is unusable?** As labeled data: 62–85% carry the wrong
   class depending on budget (conditioning consistency 15–53%); the no-leakage filter itself

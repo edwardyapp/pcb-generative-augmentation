@@ -19,6 +19,10 @@ TWO CURVES, because the difference is the whole point:
   HONEST  generator trained ONLY on the budget-b subsample. No information the classifier does
           not already hold.
 Reported side by side. If the honest curve is flat and the leaky one soars, that IS the result.
+
+OUTCOME (added 2026-10-02): the leaky curve did not soar (+0.002 at 10%). The +0.51 cited above
+is abc_recon's reconstruction ceiling, which involves no generator; it is not what a full-pool
+generator delivers (AUDIT.md section 7).
 """
 import glob
 import json

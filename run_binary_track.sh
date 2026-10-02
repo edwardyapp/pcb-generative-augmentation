@@ -12,6 +12,10 @@
 #   uncond_tight        - on the whole train pool  -> the LEAKY curve (what the field reports)
 #   uncond_b{10,25,50}  - on the frozen budget subsample only -> the HONEST curve
 # and report them side by side, exactly as with the class-conditional track.
+#
+# OUTCOME (added 2026-10-02): the hypothesis above did not hold. +0.51 is a reconstruction
+#   ceiling (abc_recon.py uses no generator), not what a full-pool generator delivers. The
+#   full-pool generator gives +0.002 at 10% here and in the 6-way track (AUDIT.md section 7).
 set -u
 cd /mnt/storage/PycharmProjects/vq-vae-2-pytorch
 

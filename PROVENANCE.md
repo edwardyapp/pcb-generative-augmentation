@@ -449,3 +449,45 @@ recorded anywhere and are unrecoverable.
 submission state spans three commits. The header's convention of referring to
 tags by name rather than by hash is what keeps the rest of this document valid
 across that move.
+
+### 5.2 Pre-publication fixes — 2026-10-02
+
+One commit on `master` after `iceta-2026-submission`. **The tag was not moved**: it
+still marks the state submitted on 2026-07-30, which therefore still contains the
+figure and code paths corrected here.
+
+**Fig 11 regenerated; it plotted the retracted claim.** `plot_budget_abc.py`
+drew `abc_recon.json`'s `B_pool` (≈0.910 at 10%) under the label "generator
+trained on the FULL pool (LEAKY)". That arm has no generator (AUDIT.md §7.1); the
+true full-pool generator gives 0.424 at 10%, +0.002 over its own A. The script
+now reads `results/abc_budget_b*.json` (budget-restricted generator) and
+`results/abc_leaky_b{10,25,50}.json` (full-pool generator), and plots B − A and
+C − A for each arm against **its own** Condition-A run, with the ±0.015 rerun
+band of AUDIT.md §7.5. It no longer reads `abc_recon.json`. This overtakes the
+§3 table row "Fig 11 (honest vs leaky) … reads `results/abc_recon.json`,
+`abc_budget_b*.json`": it now reads `abc_budget_b*.json` and `abc_leaky_b*.json`.
+The §3 row "Finding 5c (leakage ceiling)" is likewise better read as
+"reconstruction ceiling".
+
+**Other places that reported +0.510 as a full-pool generator result.**
+`abc_b10_seeds.py` printed "the LEAKY protocol (generator trained on the full
+pool) gives +0.510" as a hard-coded constant; it now reads the full-pool
+generator (+0.002) and the reconstruction ceiling (+0.510) from their result
+files and labels each. `plot_abc.py` (Fig 10) labelled the reconstruction arms
+"LEAKY" and their gap "leakage"; relabelled "ceiling", data unchanged.
+`status.sh` echoed "leak +0.51"; relabelled. `findings.md` Finding 5c and the
+matching answer were rewritten to the three-arm framing of AUDIT.md §7.6, which
+is the framing the paper uses. `run_binary_track.sh` and `abc_binary.py` stated
+the +0.51-as-leakage hypothesis before the experiment; that text is kept and an
+OUTCOME note appended to each.
+
+**Dead guards in `train_binary.py`.** The board-leak loop had a bare `pass` and
+the train/test check ended `or True`, so neither could fire. Replaced with an
+assertion that no train row is on a test board and one that no crop is in both
+train and test. Both pass on the committed manifests (0 violations each) and
+both were confirmed to fire on injected violations, so no binary-track result is
+affected.
+
+**AUDIT.md line references.** AUDIT.md cites `plot_budget_abc.py` and
+`abc_b10_seeds.py` by line number. Those references are to the files at
+`iceta-2026-submission` and remain valid there; they do not match `master`.

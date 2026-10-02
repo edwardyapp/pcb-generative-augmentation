@@ -46,15 +46,16 @@ def pools():
     neg = load('results/manifest_nodefect.csv')
     tb = set(load_splits()['test_boards'])
     for r in pos + neg:
-        pass
+        if r['split'] == 'train':
+            assert r['board_id'] not in tb, f'LEAK: test board {r["board_id"]} in train split'
     tr = [(r['crop_path'], 1) for r in pos if r['split'] == 'train'] + \
          [(r['crop_path'], 0) for r in neg if r['split'] == 'train']
     # balanced held-out set: equal positives and negatives
     te_p = [(r['crop_path'], 1) for r in pos if r['split'] == 'test']
     te_n = [(r['crop_path'], 0) for r in neg if r['split'] == 'test']
     te_n = random.Random(0).sample(te_n, min(len(te_p), len(te_n)))
-    for p, _ in tr:
-        assert 'test' not in p or True
+    overlap = {p for p, _ in tr} & {p for p, _ in te_p + te_n}
+    assert not overlap, f'LEAK: {len(overlap)} crops in both train and test'
     return tr, te_p + te_n
 
 

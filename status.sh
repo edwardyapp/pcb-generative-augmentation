@@ -14,7 +14,7 @@ date '+  %a %d %b %H:%M'
 echo
 echo "✔ DONE"
 echo "   crop-scale result ......... 600px 0.246 -> tight 0.896 (size-matched, 3 seeds)"
-echo "   A/B/C recon upper bound ... leak +0.51 @10% vs honest +0.09  (fig10)"
+echo "   A/B/C recon ceiling ....... +0.51 @10% (no generator) vs own-budget recon +0.09  (fig10)"
 echo "   conditioning trend ........ ep80 22.4% -> ep320 29.2%   GATE PASSED"
 echo "   prior NLL ................. train 0.009 / held-out 5.12 -> overfitting (fig12)"
 echo "   duplicate-image claim ..... RETRACTED (duplicates_review.html)"
