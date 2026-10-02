@@ -17,8 +17,8 @@ What produced what, and what cannot be reproduced: **[`PROVENANCE.md`](PROVENANC
 > Upstream shipped a file named `vqvae_560.pt` containing a VQ-VAE pretrained on
 > FFHQ. **That file has been removed from this repository** to prevent a name
 > collision. Our `vqvae_560.pt` is a *different* model — trained on PCB crops,
-> MD5 `ba2932cf30e5096464ead3cd260d4822`, 6 107 550 bytes — and is distributed
-> with the checkpoint release, not in git.
+> MD5 `ba2932cf30e5096464ead3cd260d4822`, 6 107 550 bytes — and is not in git.
+> No public checkpoint release exists.
 > Upstream's FFHQ file (MD5 `11a2bb56500299019ec93a03e5eebbf2`) remains
 > available in this repository's history at tag `icce-tw-2026`, and from upstream.
 
@@ -34,8 +34,9 @@ Code, result files and figures only — about 10 MB.
 | `findings.md` | the claims, with the evidence for each |
 | `PROVENANCE.md` | provenance, reproducibility, and what is lost |
 
-**Not in git** (see `PROVENANCE.md` for where to get them): model weights
-(51 GB), the HRIPCB-derived image data, extracted `lmdb` codes, training logs.
+**Not in git** (`PROVENANCE.md` describes each): model weights (51 GB), the
+HRIPCB-derived image data, extracted `lmdb` codes, training logs. None of these
+is publicly released.
 
 ## Data
 
@@ -62,8 +63,8 @@ Full script-to-table mapping: `PROVENANCE.md` §3.1.
 
 One link in the chain is **not** reproducible here: the 600 px crops in
 `PCB-cropped/` were produced by a script that ran on another machine and is not
-in this repository. They are an input, and must be obtained with the data
-release. See `PROVENANCE.md` §2.5.
+in this repository. They are an input and are not in this repository. See
+`PROVENANCE.md` §2.5.
 
 ## Upstream usage
 
@@ -78,8 +79,8 @@ Requires Python ≥ 3.6, PyTorch ≥ 1.1, lmdb. Developed against Python 3.9.
 
 ## Citing
 
-If you use this code or data, please cite the relevant paper and the checkpoint
-release DOI. Details in `PROVENANCE.md`.
+If you use this code, please cite the relevant paper (titles in `PROVENANCE.md`
+§0).
 
 ## License
 
@@ -88,4 +89,9 @@ Seonghyeon; modifications and all PCB-specific work are Copyright (c) 2026
 Edward Yapp. See [`LICENSE`](LICENSE).
 
 The HRIPCB dataset is the property of its original authors and is subject to its
-own terms; this repository redistributes only derived crops.
+own terms. This repository does not redistribute the HRIPCB images or the crops
+derived from them; it contains their file names, splits and labels
+(`results/*.csv`, `results/splits.json`), and a small number of example crops
+appear in the figures (`figures/`, `fig_samples.*`).
+
+Development of this code was assisted by AI coding tools.

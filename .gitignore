@@ -164,3 +164,12 @@ demo_timelapse/
 /augmentMVTecImageFiles.py
 /pixelsnail_mnist.py
 /eval_demo_pool.py
+
+# Untracked on 2026-10-02: review pages whose ~1,150 images (*review_assets/,
+# derived from HRIPCB crops) were never in git, so they rendered broken in any
+# clone. Regenerated locally by build_*review.py. The data behind them is in
+# results/duplicates.json, generation_review.json, samples_review.json.
+/review.html
+/duplicates_review.html
+/generation_review.html
+/samples_review.html

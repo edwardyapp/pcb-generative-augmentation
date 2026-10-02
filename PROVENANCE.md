@@ -491,3 +491,19 @@ affected.
 **AUDIT.md line references.** AUDIT.md cites `plot_budget_abc.py` and
 `abc_b10_seeds.py` by line number. Those references are to the files at
 `iceta-2026-submission` and remain valid there; they do not match `master`.
+
+### 5.3 Publication — 2026-10-02
+
+A second commit after §5.2, so §5.2's "one commit" now reads "two commits"; the tag
+is still not moved.
+
+**Untracked: `review.html`, `duplicates_review.html`, `generation_review.html`,
+`samples_review.html`.** Their ~1,150 images (`*review_assets/`) were never in git,
+so every clone rendered them broken. They remain on disk, regenerable by
+`build_*review.py`, and are now ignored. `status.sh` still names them; it describes
+the local working tree.
+
+**README corrected.** It referred to a checkpoint release and a DOI; neither exists,
+and both references are removed. It said the repository "redistributes only derived
+crops"; it redistributes none, beyond the example crops shown in figures. It now also
+states that development was assisted by AI coding tools.
