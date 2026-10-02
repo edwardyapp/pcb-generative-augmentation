@@ -1,5 +1,11 @@
 # AUDIT — adversarial verification of five claims
 
+> **Paths (added 2026-10-02).** This audit was written when every script sat at the repository
+> root; its file and line references match the files at tag `iceta-2026-submission`. Scripts
+> now live in `src/`, `experiments/`, `analysis/` and `legacy/` under the same basenames
+> (mapping: PROVENANCE.md §5.5). On master, run the `python3 -c` blocks below with
+> `PYTHONPATH=src:experiments:analysis`, and the `sed -n` excerpts at the tag.
+
 > **Scope note (appended 2026-07-28).** The title records this document's original commission —
 > five scoped claims, §1–§5. Scope has since grown to **31 claims across §1–§6**: the original
 > five, plus the 26 remaining ICETA numbers verified in §6. The title is left as first written;

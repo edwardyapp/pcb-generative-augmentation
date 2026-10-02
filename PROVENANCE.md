@@ -555,3 +555,63 @@ The same claim appears in the messages of tags `icce-tw-2026` and
 `iceta-2026-submission`. Tags are not moved or rewritten (§5.2), so those messages stand
 as written; this section supersedes them. `README.md`, `REPRODUCE.md` (§0, §6.2) and
 `findings.md` (Finding 4) are corrected in place, each marked with a pointer here.
+
+### 5.5 Repository layout — 2026-10-02
+
+The 75 scripts formerly at the repository root were moved with `git mv` into four
+directories by role. **No file was renamed**: each keeps its basename, so a root-level
+name anywhere in this document, in AUDIT.md, or in a tag or commit message resolves
+through the table below. `git log --follow <new path>` traces each file's history
+across the move (every rename is detected; minimum similarity 83%). Both tags still
+point at the old flat layout.
+
+| new directory | files | moved from the root (old path = basename) |
+|---|---|---|
+| `src/` | 20 | `build_split.py`, `dataset.py`, `extract_code.py`, `extract_code_labeled.py`, `make_budget_subsamples.py`, `make_tight_crops.py`, `pcb_utils.py`, `pixelsnail.py`, `sample.py`, `scheduler.py`, `train_binary.py`, `train_classifier.py`, `train_pixelsnail.py`, `train_pixelsnail_cond.py`, `train_vqvae.py`, `train_vqvae_tight.py`, `vqvae.py` and `distributed/` (whole package) |
+| `experiments/` | 29 | `abc_b10_seeds.py`, `abc_binary.py`, `abc_budget.py`, `abc_recon.py`, `calibrate_sliding.py`, `cond_check.py`, `cond_check_n360_report.py`, `detector_600.py`, `eval_prior_nll.py`, `gate_check.py`, `make_defect_detector.py`, `run_b10_seeds.sh`, `run_binary_track.sh`, `run_budget_b25_b50.sh`, `run_budget_pipeline.sh`, `run_budget_pipeline_resume.sh`, `run_cond_check_n360.sh`, `run_cond_checks.sh`, `run_converge.sh`, `run_genreview.sh`, `run_nll_eval.sh`, `run_reorder.sh`, `run_samples_review.sh`, `sample_cond.py`, `sample_pool.py`, `sample_uncond.py`, `score_pools_600.py`, `test_conditioning.py`, `test_overfit_matrix.py` |
+| `analysis/` | 19 | `build_duplicates_review.py`, `build_generation_review.py`, `build_review.py`, `build_samples_review.py`, `checkpoint_inventory.py`, `find_duplicates.py`, `make_fig_samples.py`, `make_negative_figs.py`, `make_paper_figs.py`, `nn_baseline.py`, `nn_baseline_600.py`, `nn_pixel.py`, `plot_abc.py`, `plot_budget_abc.py`, `plot_consistency.py`, `plot_loss_curves.py`, `plot_nll.py`, `status.sh`, `status_checks.py` |
+| `legacy/` | 7 | `augmentGoodPCBImages.py`, `demo_app.py`, `DEMO_README.md`, `generate_pool.py`, `make_timelapse.py`, `randomlyCopyImageFiles.py`, `train_vqvae-trainVal-allTransformations.py` |
+
+Kept at the root: `README.md`, `PROVENANCE.md`, `REPRODUCE.md`, `AUDIT.md`,
+`findings.md`, `LICENSE`, `.gitignore`, `.gitattributes`, `results/`, `figures/`,
+`fig_samples.{png,pdf}` and `fig_samples_NOTE.txt`.
+
+**Why module names stay flat.** Every row in every `lmdb/` store is a pickled
+`dataset.CodeRow`, so `dataset` must stay importable under that bare name. Turning the
+directories into packages (`src.dataset`) would have made all eight existing stores
+unreadable. Instead, the 28 scripts that import a module from another directory begin
+with a two-line `sys.path` bootstrap that adds `src/`, `experiments/` and `analysis/`.
+Imports are otherwise unchanged. Scripts are run from the repository root as before:
+`python experiments/abc_budget.py`.
+
+**Other code changes, all path-only.**
+- The `run_*.sh` drivers and `status.sh` now invoke scripts by their new paths.
+- `analysis/make_fig_samples.py` resolves the repository root one directory up.
+- `analysis/build_review.py` reads `src/make_tight_crops.py`.
+- Usage strings in `legacy/` now name their new paths.
+
+Line numbers shift by two in the 28 bootstrapped files. AUDIT.md's line references were
+already pinned to `iceta-2026-submission` (§5.2).
+
+**Running AUDIT.md's commands on master.** Its inline `python3 -c "from pcb_utils import
+…"` blocks need `PYTHONPATH=src:experiments:analysis`. All four such blocks were checked:
+they fail without it and pass with it. Its `sed -n 'N,Mp' <script>` excerpts refer to the
+tagged files; run them at the tag.
+
+**Verified.**
+- Every moved module's top-level imports were executed under the exact `sys.path` that
+  running it would produce, and each local import resolved to its new path.
+- One row was read from every `lmdb/` store through `src/dataset.py`, under an
+  `experiments/` script's path setup.
+- `analysis/plot_budget_abc.py`, `analysis/plot_abc.py` and
+  `analysis/make_fig_samples.py` regenerated their committed PNGs and
+  `fig_samples_NOTE.txt` byte-identical. The PDF differed only in Matplotlib version and
+  creation-date metadata, and was not recommitted.
+- Thirteen argparse entry points ran `--help` from an unrelated working directory.
+- All 13 shell scripts pass `bash -n`.
+- No moved script is still invoked or backtick-referenced by its root path in
+  README.md, REPRODUCE.md, findings.md or `legacy/DEMO_README.md`.
+
+**Known wart, recorded rather than fixed.** `src/train_binary.py` imports
+`experiments/abc_recon.py` (for `train_clf` and the transforms), so `src/` is not free
+of `experiments/`. It worked unchanged before the move and works the same after it.

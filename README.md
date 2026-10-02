@@ -1,5 +1,21 @@
 # What Helps PCB Defect Classification: Crop Scale, Not Generative Augmentation
 
+## Repository layout
+
+| path | what lives there |
+|---|---|
+| `src/` | models (VQ-VAE-2, PixelSNAIL), data preparation, training, shared utilities |
+| `experiments/` | the ICETA experiments (budget A/B/C, conditioning checks, sampling, detectors) and their `run_*.sh` drivers |
+| `analysis/` | figures, tables, review pages, status reports |
+| `legacy/` | ICCE-TW-era scripts and the talk demo ([`legacy/DEMO_README.md`](legacy/DEMO_README.md)) |
+| `results/` | every number in both papers, as JSON/CSV/JSONL |
+| `figures/`, `fig_samples.*` | figures 1–13; the paper's Fig. 1 |
+| [`findings.md`](findings.md) · [`PROVENANCE.md`](PROVENANCE.md) · [`REPRODUCE.md`](REPRODUCE.md) · [`AUDIT.md`](AUDIT.md) | the claims · what produced what · how to rerun each claim · independent verification |
+
+Run every script from the repository root (e.g. `python experiments/abc_budget.py`);
+data paths are relative to it. Scripts import each other across these directories
+by module name, so no install step is needed.
+
 Code and results for two papers on PCB defect generation and classification,
 built on [rosinality/vq-vae-2-pytorch](https://github.com/rosinality/vq-vae-2-pytorch):
 
@@ -24,15 +40,7 @@ What produced what, and what cannot be reproduced: **[`PROVENANCE.md`](PROVENANC
 
 ## What is in this repository
 
-Code, result files and figures only — about 10 MB.
-
-| path | contents |
-|---|---|
-| `*.py`, `run_*.sh` | pipeline, training, evaluation and plotting scripts |
-| `results/` | every number in both papers, as JSON/CSV/JSONL |
-| `figures/` | figures 1–13 |
-| `findings.md` | the claims, with the evidence for each |
-| `PROVENANCE.md` | provenance, reproducibility, and what is lost |
+Code, result files and figures only — about 10 MB; see [Repository layout](#repository-layout).
 
 **Not in git** (`PROVENANCE.md` describes each): model weights (51 GB), the
 HRIPCB-derived image data, extracted `lmdb` codes, training logs. None of these
@@ -52,11 +60,11 @@ nothing: not the classifier, not the VQ-VAE, not the priors. 10 668 crops →
 Given the crops and checkpoints in place:
 
 ```
-python build_split.py          # -> results/splits.json
-python make_tight_crops.py     # -> PCB-cropped-tight/, results/manifest_tight*.csv
-python make_paper_figs.py      # -> results/paper_tables.md, figures/fig1-4,7
-python plot_budget_abc.py      # -> figures/fig11_budget_abc.png
-python cond_check_n360_report.py
+python src/build_split.py                     # -> results/splits.json
+python src/make_tight_crops.py                # -> PCB-cropped-tight/, results/manifest_tight*.csv
+python analysis/make_paper_figs.py            # -> results/paper_tables.md, figures/fig1-4,7
+python analysis/plot_budget_abc.py            # -> figures/fig11_budget_abc.png
+python experiments/cond_check_n360_report.py
 ```
 
 Full script-to-table mapping: `PROVENANCE.md` §3.1.
@@ -72,9 +80,9 @@ README previously said the crops came from a lost script; see `PROVENANCE.md` §
 The VQ-VAE-2 / PixelSNAIL implementation is upstream's, with modifications for
 class-conditional priors. Upstream's original instructions:
 
-1. Stage 1 (VQ-VAE): `python train_vqvae.py [DATASET PATH]`
-2. Extract codes: `python extract_code.py --ckpt checkpoint/[VQ-VAE CHECKPOINT] --name [LMDB NAME] [DATASET PATH]`
-3. Stage 2 (PixelSNAIL): `python train_pixelsnail.py [LMDB NAME]`
+1. Stage 1 (VQ-VAE): `python src/train_vqvae.py [DATASET PATH]`
+2. Extract codes: `python src/extract_code.py --ckpt checkpoint/[VQ-VAE CHECKPOINT] --name [LMDB NAME] [DATASET PATH]`
+3. Stage 2 (PixelSNAIL): `python src/train_pixelsnail.py [LMDB NAME]`
 
 Requires Python ≥ 3.6, PyTorch ≥ 1.1, lmdb. Developed against Python 3.9.
 

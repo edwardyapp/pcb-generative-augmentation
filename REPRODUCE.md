@@ -24,12 +24,12 @@ before comparing any number you regenerate against a published one.**
 Stage 0 — the split and the base manifest — is a prerequisite for everything else:
 
 ```bash
-python build_split.py            # -> results/splits.json, results/manifest.csv
-python make_tight_crops.py       # -> results/manifest_tight.csv, results/manifest_tight_perbbox.csv
-python make_budget_subsamples.py # -> results/manifest_tight_b{10,25,50}.csv, results/budget_subsamples.json
+python src/build_split.py            # -> results/splits.json, results/manifest.csv
+python src/make_tight_crops.py       # -> results/manifest_tight.csv, results/manifest_tight_perbbox.csv
+python src/make_budget_subsamples.py # -> results/manifest_tight_b{10,25,50}.csv, results/budget_subsamples.json
 ```
 
-`build_split.py` fixes the board-level split: boards **06 + 09** are held out as test and are
+`src/build_split.py` fixes the board-level split: boards **06 + 09** are held out as test and are
 touched by no classifier, no VQ-VAE, no prior and no filter. Every downstream script
 re-asserts this.
 
@@ -40,9 +40,9 @@ re-asserts this.
 The twelve numbers `A/B/C × {10, 25, 50, 100}%`, and the filter keep-rates.
 
 ```bash
-./run_budget_pipeline.sh
+./experiments/run_budget_pipeline.sh
 # if interrupted (it is idempotent — every stage is skipped when its output exists):
-./run_budget_pipeline_resume.sh
+./experiments/run_budget_pipeline_resume.sh
 ```
 
 Per budget this trains the VQ-VAE from scratch on that budget's frozen subsample, extracts
@@ -69,7 +69,7 @@ for b in [10,25,50,100]:
 Expected: `10 {A 0.419, B 0.431, C 0.433}` · `25 {0.641, 0.595, 0.632}` ·
 `50 {0.804, 0.759, 0.814}` · `100 {0.899, 0.848, 0.884}`.
 
-**Filter identity.** Condition C's filter is not a separate model: `abc_budget.py` trains the
+**Filter identity.** Condition C's filter is not a separate model: `experiments/abc_budget.py` trains the
 Condition-A model and hands that same object to `filter_pool`, so the filter at budget *b*,
 seed *s* **is** the Condition-A model at budget *b*, seed *s*. A synthetic crop is kept iff
 that model predicts the class the prior was conditioned on. No confidence threshold.
@@ -79,7 +79,7 @@ that model predicts the class the prior was conditioned on. No confidence thresh
 ## 2. The 10-seed paired test
 
 ```bash
-python abc_b10_seeds.py --seeds 10        # or: ./run_b10_seeds.sh
+python experiments/abc_b10_seeds.py --seeds 10        # or: ./experiments/run_b10_seeds.sh
 ```
 
 Reads the frozen b10 subsample and the existing `synth_b10/` pool — it regenerates neither,
@@ -123,7 +123,7 @@ three seeds. Each run writes one JSON per (condition, budget, seed).
 # TIGHT, size-matched       -> results/classifier_Atight_b*_s*.json
 # TIGHT, per-bbox           -> results/classifier_Atightpb_b100_s*.json
 for B in 0.1 0.25 0.5 1.0; do for S in 0 1 2; do
-  python train_classifier.py --manifest results/manifest.csv \
+  python src/train_classifier.py --manifest results/manifest.csv \
       --budget $B --seed $S --condition A \
       --out results/classifier_A_b$(python3 -c "print(int($B*100))")_s$S.json
 done; done
@@ -131,7 +131,7 @@ done; done
 
 > **Reconstructed, not attested.** Unlike every other entry in this file, these exact
 > invocations are **not** preserved in a committed run script. They are reconstructed from
-> `train_classifier.py`'s argument parser plus the run headers in `logs/condA_sweep.log`,
+> `src/train_classifier.py`'s argument parser plus the run headers in `logs/condA_sweep.log`,
 > `logs/tightA_budget_sweep.log` and `logs/tight_sweep.log` (e.g.
 > `[cond A_tight budget 1.0 seed 0] train=2149 test=518 test_boards=['06','09']`). Swap
 > `--manifest`/`--condition` for the TIGHT variants. Treat the JSON outputs already in
@@ -155,14 +155,14 @@ Note `macro_f1` (final epoch) is the reported metric. These files also carry
 `best_macro_f1` (best epoch, selected on the test set) — **it is not used in the paper** and
 must not be quoted.
 
-Figures: `python make_paper_figs.py`, `python plot_budget_abc.py`.
+Figures: `python analysis/make_paper_figs.py`, `python analysis/plot_budget_abc.py`.
 
 ---
 
 ## 4. The binary track (defect vs no-defect)
 
 ```bash
-./run_binary_track.sh        # -> results/abc_binary.json, synth_binary_*/
+./experiments/run_binary_track.sh        # -> results/abc_binary.json, synth_binary_*/
 ```
 
 Trains unconditional priors (`--n_img_class 0`) on defect crops only, so every sample is a
@@ -177,9 +177,9 @@ honest (budget-restricted) and leaky (full-pool) generators at each budget.
 ### 5.1 Conditioning strength vs training epoch
 
 ```bash
-./run_cond_checks.sh          # -> results/cond_checks.jsonl,  figures/fig9_consistency_vs_epoch.png
-./run_cond_check_n360.sh      # -> results/cond_check_ep320_n360.jsonl + _pooled.json
-python cond_check_n360_report.py
+./experiments/run_cond_checks.sh          # -> results/cond_checks.jsonl,  figures/fig9_consistency_vs_epoch.png
+./experiments/run_cond_check_n360.sh      # -> results/cond_check_ep320_n360.jsonl + _pooled.json
+python experiments/cond_check_n360_report.py
 ```
 
 The n=360 replication is the one to quote: the earlier n=72 check at epoch 320 passed the
@@ -195,7 +195,7 @@ scratch with `warm=None` (AUDIT.md §3.3, §3.5).
 ### 5.2 Overfit-one-batch wiring control
 
 ```bash
-python test_overfit_matrix.py | tee logs/overfit_matrix.log
+python experiments/test_overfit_matrix.py | tee logs/overfit_matrix.log
 # -> results/overfit_matrix.json, figures/fig13_overfit_one_batch.png
 ```
 
@@ -212,8 +212,8 @@ Two scope limits, both recorded in the JSON and both of which the paper must sta
   The conditioning *topology* is identical; the widths and depths are not.
 - **Top prior only.** The bottom prior is not exercised by this script.
 
-The related `python test_conditioning.py` covers both hierarchies but persists nothing beyond
-the same PNG; prefer `test_overfit_matrix.py`, which now writes JSON.
+The related `python experiments/test_conditioning.py` covers both hierarchies but persists nothing beyond
+the same PNG; prefer `experiments/test_overfit_matrix.py`, which now writes JSON.
 
 ---
 
@@ -224,7 +224,7 @@ should expect to see if you re-run.
 
 ### 6.1 Runs are not bit-deterministic (±0.004)
 
-`set_seed` (`train_classifier.py`) seeds `random`, `numpy` and `torch`, but does **not** set
+`set_seed` (`src/train_classifier.py`) seeds `random`, `numpy` and `torch`, but does **not** set
 `torch.backends.cudnn.deterministic`, and the data loaders use `num_workers=8`. Re-running
 reproduces published numbers to roughly **±0.004 macro-F1**, not exactly.
 
@@ -245,7 +245,7 @@ reproduce it, download the release and copy `JPEGImages/` to `PCB-cropped/all/`.
 an **input** rather than a build product, but it is public, so this limit no longer applies.
 
 What *is* reproducible from them: the board split, all manifests, the tight crops (recut from
-the VOC bboxes by `make_tight_crops.py`), and everything downstream.
+the VOC bboxes by `src/make_tight_crops.py`), and everything downstream.
 
 The crop geometry was nonetheless recovered post hoc from the VOC annotations, which is how
 Finding 4 (defect position inside the 600px frame is effectively uniform-random; median 173px
@@ -253,10 +253,10 @@ from centre) was established without the original script.
 
 ### 6.3 `synth_b10`'s generating source is not provably byte-identical
 
-`sample_pool.py` (mtime 2026-07-13 09:42:43) and `cond_check.py` (09:42:31) were modified
+`experiments/sample_pool.py` (mtime 2026-07-13 09:42:43) and `experiments/cond_check.py` (09:42:31) were modified
 *during* the b10 sampling run, which started ≈08:23 and wrote its last file at 09:51:51. A
 mid-run edit cannot affect an already-loaded Python process, and the mitigating evidence is
-strong — the b10 log's output format matches the current `sample_pool.py` exactly, and all
+strong — the b10 log's output format matches the current `experiments/sample_pool.py` exactly, and all
 four pools share an identical structure (10 chunks × 36, 60 per class, 360 distinct images).
 But strictly, for `synth_b10` alone the source on disk is not *provably* byte-identical to
 the source that produced it. `synth_b25`, `synth_b50` and `synth_b100` were all sampled after
@@ -264,7 +264,7 @@ the edit and are unaffected. Full detail: AUDIT.md §4.2.
 
 ### 6.4 Frozen subsamples — a design limit, not a defect
 
-At each budget the data subsample is **frozen** (`make_budget_subsamples.py`, `DATA_SEED = 0`);
+At each budget the data subsample is **frozen** (`src/make_budget_subsamples.py`, `DATA_SEED = 0`);
 the 3 (or 10) seeds vary **classifier initialisation only**. Retraining 12 generators
 (4 budgets × 3 data draws) was not affordable. Error bars are therefore narrower than a full
 data-resampling study would give and must not be read as sampling error over subsamples.
@@ -277,14 +277,14 @@ expected to.
 
 | artefact | produced by |
 |---|---|
-| `results/splits.json`, `results/manifest.csv` | `build_split.py` |
-| `results/manifest_tight*.csv` | `make_tight_crops.py` |
-| `results/manifest_tight_b{10,25,50}.csv`, `budget_subsamples.json` | `make_budget_subsamples.py` |
-| `results/abc_budget_b*.json` | `abc_budget.py` via `run_budget_pipeline.sh` |
-| `results/abc_budget_b10_seeds.json` | `abc_b10_seeds.py` |
-| `results/abc_recon.json` (leaky ceiling) | `abc_recon.py` |
-| `results/abc_binary.json` | `abc_binary.py` via `run_binary_track.sh` |
-| `results/classifier_*.json` | `train_classifier.py` |
-| `results/cond_checks*.jsonl` | `cond_check.py` |
-| `results/overfit_matrix.json` | `test_overfit_matrix.py` |
-| `figures/fig*.png` | `make_paper_figs.py`, `plot_*.py`, `test_overfit_matrix.py` |
+| `results/splits.json`, `results/manifest.csv` | `src/build_split.py` |
+| `results/manifest_tight*.csv` | `src/make_tight_crops.py` |
+| `results/manifest_tight_b{10,25,50}.csv`, `budget_subsamples.json` | `src/make_budget_subsamples.py` |
+| `results/abc_budget_b*.json` | `experiments/abc_budget.py` via `experiments/run_budget_pipeline.sh` |
+| `results/abc_budget_b10_seeds.json` | `experiments/abc_b10_seeds.py` |
+| `results/abc_recon.json` (leaky ceiling) | `experiments/abc_recon.py` |
+| `results/abc_binary.json` | `experiments/abc_binary.py` via `experiments/run_binary_track.sh` |
+| `results/classifier_*.json` | `src/train_classifier.py` |
+| `results/cond_checks*.jsonl` | `experiments/cond_check.py` |
+| `results/overfit_matrix.json` | `experiments/test_overfit_matrix.py` |
+| `figures/fig*.png` | `analysis/make_paper_figs.py`, `analysis/plot_*.py`, `experiments/test_overfit_matrix.py` |
