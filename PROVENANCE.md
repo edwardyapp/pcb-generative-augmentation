@@ -507,3 +507,51 @@ the local working tree.
 and both references are removed. It said the repository "redistributes only derived
 crops"; it redistributes none, beyond the example crops shown in figures. It now also
 states that development was assisted by AI coding tools.
+
+### 5.4 The 600 px crops are the public release, byte for byte — 2026-10-02
+
+**Finding.** `PCB-cropped/all` is not the output of a lost cropping script. It is a
+verbatim copy of `JPEGImages/` from the TDD-net [2] VOC release (`VOC_PCB.zip`,
+1 185 147 187 bytes, MD5 `033ce3f2ca5cdf2e20eb65dfa50bca81`), which is itself derived
+from HRIPCB [4]. ([2], [4] are the ICETA paper's references: Ding et al., TDD-net, 2019;
+Huang & Wei, arXiv:1901.08204.) Evidence, every file hashed, archive read in place:
+
+| check | result |
+|---|---|
+| file count | archive `JPEGImages/` 10 668, `PCB-cropped/all` 10 668 |
+| filenames | 10 668 common; 0 only in the archive; 0 only local |
+| MD5 | **10 668 / 10 668 byte-identical**, 0 differ. By variant: plain, `l`, `rot90`, `rot270` each 2 667 / 2 667 |
+| timestamps | every local file keeps the archive's own entry mtimes (2019-04-06 20:18–20:2x), which extraction preserves; `PCB-cropped/all` itself dates from 2024-12-01 |
+
+So the 600 px crops, and also their four-way flip/rotation augmentation, came from the
+release; nothing was cut or augmented locally. The release's own crop geometry is what
+Finding 4 measures. The archive's provenance as *the* public release is taken from where
+it was downloaded. No published hash exists to check it against.
+
+`VOC_PCB/` was checked the same way: all 21 342 archive files (images, annotations,
+`ImageSets/`, `check_xml.py`, `generate_txt.py`) are present and byte-identical, with no
+extra local files.
+
+**Consequence: the gap is closed.** The 600 px baseline, and with it the whole ICETA chain,
+is reproducible from public data: download the release and use `JPEGImages/` as
+`PCB-cropped/all`. §3.4's "the only break" no longer exists. The ICCE-TW 600 px crops are
+reproducible in the same way.
+
+**Overtaken statements** (left intact above, per §5's convention):
+- §2.5 "**Not reproducible from this repo.** … the script that produced these 600 px crops
+  ran on another machine": the files are the release's; no local script produced them.
+- §2.6 row "600 px crops | **No** — cropping script ran elsewhere": now **Yes**, from the
+  public release.
+- §3.2 row `VOC_PCB/` "HRIPCB, as distributed": more precisely, **the TDD-net [2] VOC
+  release, derived from HRIPCB [4]** (600 px crops of HRIPCB boards plus augmentation).
+- §3.2 row `PCB-cropped/all` "**input, not reproducible here**": reproducible; a copy of
+  `VOC_PCB/JPEGImages/`.
+- §3.4 row "600 px crops | **No** — upstream input, cropping script absent", and the
+  paragraph after it calling this link "the only break": now **Yes**; no break remains.
+- §4 item 4 "The 600 px cropping procedure. Ran on another machine": the cropping was
+  done by the release's authors and is described in [2]; nothing of ours is lost.
+
+The same claim appears in the messages of tags `icce-tw-2026` and
+`iceta-2026-submission`. Tags are not moved or rewritten (§5.2), so those messages stand
+as written; this section supersedes them. `README.md`, `REPRODUCE.md` (§0, §6.2) and
+`findings.md` (Finding 4) are corrected in place, each marked with a pointer here.

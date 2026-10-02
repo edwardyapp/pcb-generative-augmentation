@@ -61,10 +61,11 @@ python cond_check_n360_report.py
 
 Full script-to-table mapping: `PROVENANCE.md` §3.1.
 
-One link in the chain is **not** reproducible here: the 600 px crops in
-`PCB-cropped/` were produced by a script that ran on another machine and is not
-in this repository. They are an input and are not in this repository. See
-`PROVENANCE.md` §2.5.
+The chain starts from public data. The 600 px crops in `PCB-cropped/all` are a
+byte-identical copy of `JPEGImages/` in the TDD-net VOC release (`VOC_PCB`),
+itself derived from HRIPCB: all 10 668 files match by name and MD5. Download that
+release and use its `JPEGImages/` as `PCB-cropped/all`. (Corrected 2026-10-02: this
+README previously said the crops came from a lost script; see `PROVENANCE.md` §5.4.)
 
 ## Upstream usage
 

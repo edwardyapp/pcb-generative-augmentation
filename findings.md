@@ -64,7 +64,9 @@ rests on. With correct crops, a plain ResNet-18 reaches **0.42 at 10%** and **0.
 from ~115 real crops/class, **before any synthetic data**.
 
 ## Finding 4 — The original crops were never defect-centred (Fig 4)
-Recovered from the VOC bbox annotations (the original cropping script ran on another machine):
+Recovered from the VOC bbox annotations. The 600px crops are the TDD-net VOC release's own
+files, byte-identical, so this measures the release's cropping (corrected 2026-10-02; an
+earlier version said our cropping script ran on another machine, see PROVENANCE.md §5.4):
 defect positions inside the 600px crops are **effectively uniform-random** — median **173px**
 from centre, only **5.5%** within 50px, position std ≈160px vs ~166px for uniform placement.
 The dataset's own `generate_txt.py` also performs a **crop-level random split**, i.e. the
