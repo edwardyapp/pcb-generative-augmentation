@@ -11,7 +11,10 @@
 | `results/` | every number in both papers, as JSON/CSV/JSONL |
 | `figures/`, `fig_samples.*` | figures 1–13; the paper's Fig. 1 |
 | `paper/` | the ICETA 2026 camera-ready ([`paper/ICETA-2026.pdf`](paper/ICETA-2026.pdf)) |
-| [`findings.md`](findings.md) · [`PROVENANCE.md`](PROVENANCE.md) · [`REPRODUCE.md`](REPRODUCE.md) · [`AUDIT.md`](AUDIT.md) | the claims · what produced what · how to rerun each claim · independent verification |
+| [`findings.md`](findings.md) | the claims and their evidence |
+| [`PROVENANCE.md`](PROVENANCE.md) | how each result was produced |
+| [`REPRODUCE.md`](REPRODUCE.md) | how to rerun each result |
+| [`AUDIT.md`](AUDIT.md) | independent verification of the numbers |
 
 Run every script from the repository root (e.g. `python experiments/abc_budget.py`);
 data paths are relative to it. Scripts import each other across these directories
@@ -21,15 +24,15 @@ Code and results for two papers on PCB defect generation and classification,
 built on [rosinality/vq-vae-2-pytorch](https://github.com/rosinality/vq-vae-2-pytorch):
 
 - **ICCE-TW 2026** — VQ-VAE-2 + PixelSNAIL generation of PCB defect imagery.
-- **ICETA 2026** — a leakage-controlled re-evaluation of that pipeline. Headline:
+- **ICETA 2026** — a controlled re-evaluation of that pipeline. Headline:
   a size-matched change of crop scale is worth **+0.65 macro-F1**, while the
-  class-conditional generator yields **no usable labeled synthetic defects**.
+  class-conditional generator yields **no usable labelled synthetic defects**.
 
 Findings and the full argument: [`findings.md`](findings.md).
 Tables: [`results/paper_tables.md`](results/paper_tables.md).
-What produced what, and what cannot be reproduced: **[`PROVENANCE.md`](PROVENANCE.md)** — read this first.
+[`PROVENANCE.md`](PROVENANCE.md) records how each result was produced and what cannot be reproduced.
 
-> ### ⚠️ `vqvae_560.pt` is not the upstream FFHQ checkpoint
+> **Note on `vqvae_560.pt`**
 >
 > Upstream shipped a file named `vqvae_560.pt` containing a VQ-VAE pretrained on
 > FFHQ. **That file has been removed from this repository** to prevent a name
@@ -52,8 +55,8 @@ is publicly released.
 Derived from the public **HRIPCB** dataset (10 boards, 6 defect classes:
 missing_hole, mouse_bite, open_circuit, short, spur, spurious_copper).
 
-Board-level split, seed 0 — boards **06 and 09 held out** as test, touched by
-nothing: not the classifier, not the VQ-VAE, not the priors. 10 668 crops →
+Board-level split, seed 0. Boards 06 and 09 are held out as test and used by no
+model during training. 10 668 crops →
 8 596 train / 2 072 test. Recorded in `results/splits.json`.
 
 ## Reproducing the tables
@@ -70,11 +73,10 @@ python experiments/cond_check_n360_report.py
 
 Full script-to-table mapping: `PROVENANCE.md` §3.1.
 
-The chain starts from public data. The 600 px crops in `PCB-cropped/all` are a
+All inputs come from public data. The 600 px crops in `PCB-cropped/all` are a
 byte-identical copy of `JPEGImages/` in the TDD-net VOC release (`VOC_PCB`),
 itself derived from HRIPCB: all 10 668 files match by name and MD5. Download that
-release and use its `JPEGImages/` as `PCB-cropped/all`. (Corrected 2026-10-02: this
-README previously said the crops came from a lost script; see `PROVENANCE.md` §5.4.)
+release and use its `JPEGImages/` as `PCB-cropped/all`.
 
 ## Upstream usage
 
