@@ -615,3 +615,17 @@ tagged files; run them at the tag.
 **Known wart, recorded rather than fixed.** `src/train_binary.py` imports
 `experiments/abc_recon.py` (for `train_clf` and the transforms), so `src/` is not free
 of `experiments/`. It worked unchanged before the move and works the same after it.
+
+### 5.6 Camera-ready paper tracked — 2026-10-03
+
+`paper/ICETA-2026.pdf` is the final ICETA 2026 camera-ready (2 pages, MD5
+`4c31182b34c5a79775eacee5c92c7d39`). It overtakes the statement in the
+`iceta-2026-submission` tag message that the manuscript is not in this repository.
+That tag still marks the submission state, not this version.
+
+**Reference numbers changed.** §5.4 cites the paper's references as TDD-net [2] and
+HRIPCB [4], which was their numbering in the draft current on 2026-10-02. In the
+camera-ready, **TDD-net (Ding et al., 2019) is [5]**; HRIPCB (Huang & Wei,
+arXiv:1901.08204) is still [4]; and [2] is now the ICCE-TW paper. Read §5.4's "[2]" as
+[5]. The camera-ready's wording for the data, "from the released 600 × 600 crops [5]",
+is the one §5.4's evidence supports.

@@ -10,6 +10,7 @@
 | `legacy/` | ICCE-TW-era scripts and the talk demo ([`legacy/DEMO_README.md`](legacy/DEMO_README.md)) |
 | `results/` | every number in both papers, as JSON/CSV/JSONL |
 | `figures/`, `fig_samples.*` | figures 1–13; the paper's Fig. 1 |
+| `paper/` | the ICETA 2026 camera-ready ([`paper/ICETA-2026.pdf`](paper/ICETA-2026.pdf)) |
 | [`findings.md`](findings.md) · [`PROVENANCE.md`](PROVENANCE.md) · [`REPRODUCE.md`](REPRODUCE.md) · [`AUDIT.md`](AUDIT.md) | the claims · what produced what · how to rerun each claim · independent verification |
 
 Run every script from the repository root (e.g. `python experiments/abc_budget.py`);
@@ -40,7 +41,7 @@ What produced what, and what cannot be reproduced: **[`PROVENANCE.md`](PROVENANC
 
 ## What is in this repository
 
-Code, result files and figures only — about 10 MB; see [Repository layout](#repository-layout).
+Code, result files, figures and the ICETA paper — about 11 MB; see [Repository layout](#repository-layout).
 
 **Not in git** (`PROVENANCE.md` describes each): model weights (51 GB), the
 HRIPCB-derived image data, extracted `lmdb` codes, training logs. None of these
