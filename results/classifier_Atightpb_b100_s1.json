@@ -1,0 +1,22 @@
+{
+  "condition": "A_tight_perbbox",
+  "budget": 1.0,
+  "seed": 1,
+  "macro_f1": 0.9498516205834154,
+  "accuracy": 0.9498069498069498,
+  "best_macro_f1": 0.9554391528305182,
+  "per_class_f1": {
+    "missing_hole": 1.0,
+    "mouse_bite": 0.9061,
+    "open_circuit": 0.9341,
+    "short": 0.9647,
+    "spur": 0.9775,
+    "spurious_copper": 0.9167
+  },
+  "n_train": 4274,
+  "n_test": 518,
+  "test_boards": [
+    "06",
+    "09"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "seed": 0,
+  "test_boards": [
+    "06",
+    "09"
+  ],
+  "train_boards": [
+    "01",
+    "04",
+    "05",
+    "07",
+    "08",
+    "10",
+    "11",
+    "12"
+  ],
+  "classes": [
+    "missing_hole",
+    "mouse_bite",
+    "open_circuit",
+    "short",
+    "spur",
+    "spurious_copper"
+  ],
+  "class_to_idx": {
+    "missing_hole": 0,
+    "mouse_bite": 1,
+    "open_circuit": 2,
+    "short": 3,
+    "spur": 4,
+    "spurious_copper": 5
+  },
+  "n_crops": 10668,
+  "n_train_crops": 8596,
+  "n_test_crops": 2072
+}

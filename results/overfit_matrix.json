@@ -1,0 +1,82 @@
+{
+  "test": "overfit-one-batch cross-class match matrix",
+  "hier": "top",
+  "scope": "Reduced-capacity surrogate from test_conditioning.build (channel=128, n_block=2, n_res_block=2, n_res_channel=128, dropout=0.0), NOT the published prior (channel=256, n_block=4, n_res_block=4, n_res_channel=256, dropout=0.1). The conditioning topology is identical; only widths/depths differ. Top prior only.",
+  "codes": "lmdb/train_pool_tight",
+  "epochs": 3000,
+  "classes": [
+    "missing_hole",
+    "mouse_bite",
+    "open_circuit",
+    "short",
+    "spur",
+    "spurious_copper"
+  ],
+  "teacher_forced_per_class": {
+    "missing_hole": 1.0,
+    "mouse_bite": 1.0,
+    "open_circuit": 0.999023,
+    "short": 1.0,
+    "spur": 1.0,
+    "spurious_copper": 1.0
+  },
+  "teacher_forced_mean": 0.999837,
+  "match_matrix": [
+    [
+      1.0,
+      0.28418,
+      0.119141,
+      0.204102,
+      0.179688,
+      0.201172
+    ],
+    [
+      0.28418,
+      1.0,
+      0.121094,
+      0.1875,
+      0.169922,
+      0.196289
+    ],
+    [
+      0.109375,
+      0.111328,
+      0.944336,
+      0.175781,
+      0.270508,
+      0.181641
+    ],
+    [
+      0.204102,
+      0.1875,
+      0.177734,
+      1.0,
+      0.183594,
+      0.24707
+    ],
+    [
+      0.179688,
+      0.169922,
+      0.265625,
+      0.183594,
+      1.0,
+      0.165039
+    ],
+    [
+      0.201172,
+      0.196289,
+      0.188477,
+      0.24707,
+      0.165039,
+      1.0
+    ]
+  ],
+  "match_matrix_axes": "row = class SAMPLED, col = memorised example compared to",
+  "free_running_diagonal_mean": 0.990723,
+  "free_running_offdiag_mean": 0.191927,
+  "separation_pp": 79.8796,
+  "classes_best_matching_own_example": 6,
+  "n_classes": 6,
+  "verdict": "WIRING CORRECT",
+  "note": "Not bit-reproducible: torch.manual_seed(0) is set but cuDNN is nondeterministic. Margins are ~99% vs ~19%, far above run-to-run noise."
+}

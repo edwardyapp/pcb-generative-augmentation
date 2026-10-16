@@ -1,0 +1,30 @@
+{
+  "threshold": 17.91520881652832,
+  "sensitivity": 0.5,
+  "pools": [
+    {
+      "pool": "REAL 600px crops (photo, has a defect)",
+      "n": 120,
+      "frac": 0.5,
+      "median_stat": 18.063819885253906
+    },
+    {
+      "pool": "VQ-VAE RECON of them (decoder blur + REAL defect) <- CEILING",
+      "n": 120,
+      "frac": 0.14166666666666666,
+      "median_stat": 11.11766242980957
+    },
+    {
+      "pool": "GENERATED - demo_pool (your ICCE-TW demo)",
+      "n": 120,
+      "frac": 0.2,
+      "median_stat": 11.839227676391602
+    },
+    {
+      "pool": "GENERATED - my sample_uncond (same ckpts, same sampler)",
+      "n": 180,
+      "frac": 0.25,
+      "median_stat": 12.568560600280762
+    }
+  ]
+}

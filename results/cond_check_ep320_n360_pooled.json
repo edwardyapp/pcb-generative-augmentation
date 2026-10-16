@@ -1,0 +1,78 @@
+{
+  "n": 360,
+  "chunks": 15,
+  "consistency": 0.37777777777777777,
+  "consistency_se": 0.025552871571348654,
+  "collapse_class": "spur",
+  "collapse_index": 0.48333333333333334,
+  "collapse_index_se": 0.026337669591407906,
+  "consistency_ex": 0.30333333333333334,
+  "consistency_ex_se": 0.02654067458463344,
+  "n_ex": 300,
+  "cramers_v": 0.3764548817643648,
+  "cramers_v_se": 0.02502589692610669,
+  "per_class": {
+    "missing_hole": 0.43333333333333335,
+    "mouse_bite": 0.36666666666666664,
+    "open_circuit": 0.16666666666666666,
+    "short": 0.31666666666666665,
+    "spur": 0.75,
+    "spurious_copper": 0.23333333333333334
+  },
+  "confusion": [
+    [
+      26,
+      10,
+      0,
+      3,
+      16,
+      5
+    ],
+    [
+      0,
+      22,
+      0,
+      6,
+      28,
+      4
+    ],
+    [
+      0,
+      11,
+      10,
+      6,
+      20,
+      13
+    ],
+    [
+      1,
+      12,
+      0,
+      19,
+      24,
+      4
+    ],
+    [
+      1,
+      1,
+      1,
+      4,
+      45,
+      8
+    ],
+    [
+      0,
+      3,
+      0,
+      2,
+      41,
+      14
+    ]
+  ],
+  "criteria_pass": {
+    "collapse_index": false,
+    "consistency_ex": true,
+    "cramers_v": true
+  },
+  "gate_holds": false
+}

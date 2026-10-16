@@ -1,0 +1,22 @@
+{
+  "condition": "A_tight",
+  "budget": 0.5,
+  "seed": 2,
+  "macro_f1": 0.786852193422166,
+  "accuracy": 0.7837837837837838,
+  "best_macro_f1": 0.7977623231407632,
+  "per_class_f1": {
+    "missing_hole": 0.9942,
+    "mouse_bite": 0.6709,
+    "open_circuit": 0.8272,
+    "short": 0.8242,
+    "spur": 0.7317,
+    "spurious_copper": 0.6729
+  },
+  "n_train": 1075,
+  "n_test": 518,
+  "test_boards": [
+    "06",
+    "09"
+  ]
+}

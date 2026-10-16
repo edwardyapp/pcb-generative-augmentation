@@ -1,0 +1,12 @@
+family,n_ckpt,reached,planned,lmdb,data,n_train,extra
+classifier_A,12,n/a,,,"600px base crops, train boards, budget-subsampled","2,149 @100%",
+classifier_Atight,1,n/a,,,"TIGHT base crops, train boards, budget-subsampled","2,149 @100%",
+pixelsnail_bottom,1,best,420,lmdb/all,"600px codes, ALL 10 boards — NO HOLDOUT (test boards LEAKED)","~10,668",hier=bottom n_img_class=0
+pixelsnail_cond_top,59,59,60,lmdb/train_pool,"600px codes, train pool only (06/09 excluded)","8,596",hier=top n_img_class=6
+pixelsnail_condtight2_bottom,80,80,80,lmdb/train_pool_tight,"TIGHT codes, train pool only (06/09 excluded)","4,274",hier=bottom n_img_class=6
+pixelsnail_condtight2_top,80,80,80,lmdb/train_pool_tight,"TIGHT codes, train pool only (06/09 excluded)","4,274",hier=top n_img_class=6
+pixelsnail_condtight_bottom,60,60,60,lmdb/train_pool_tight,"TIGHT codes, train pool only (06/09 excluded)","4,274",hier=bottom n_img_class=6
+pixelsnail_condtight_top,60,60,60,lmdb/train_pool_tight,"TIGHT codes, train pool only (06/09 excluded)","4,274",hier=top n_img_class=6
+pixelsnail_top,1,357,420,lmdb/all,"600px codes, ALL 10 boards — NO HOLDOUT (test boards LEAKED)","~10,668",hier=top n_img_class=0
+vqvae,10,560,,,"600px crops, ALL 10 boards (no holdout)","~10,668 crops",
+vqvae_tight,560,560,,,"TIGHT crops, TRAIN-POOL only (boards 06/09 excluded)","4,274 crops",

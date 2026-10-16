@@ -1,0 +1,140 @@
+[
+  {
+    "budget": 25,
+    "seed": 0,
+    "n_real": 537,
+    "n_synth": 360,
+    "n_kept": 195,
+    "keep_rate": 0.5416666666666666,
+    "A": {
+      "macro_f1": 0.6474955529808918,
+      "accuracy": 0.6312741312741312,
+      "per_class_f1": {
+        "missing_hole": 0.9884,
+        "mouse_bite": 0.4769,
+        "open_circuit": 0.6957,
+        "short": 0.7083,
+        "spur": 0.5417,
+        "spurious_copper": 0.474
+      }
+    },
+    "B": {
+      "macro_f1": 0.6065653291216874,
+      "accuracy": 0.6061776061776062,
+      "per_class_f1": {
+        "missing_hole": 1.0,
+        "mouse_bite": 0.4832,
+        "open_circuit": 0.6423,
+        "short": 0.6951,
+        "spur": 0.339,
+        "spurious_copper": 0.4797
+      },
+      "n_train": 897
+    },
+    "C": {
+      "macro_f1": 0.6352559364862526,
+      "accuracy": 0.6216216216216216,
+      "per_class_f1": {
+        "missing_hole": 0.9942,
+        "mouse_bite": 0.5612,
+        "open_circuit": 0.6571,
+        "short": 0.7083,
+        "spur": 0.4202,
+        "spurious_copper": 0.4706
+      },
+      "n_train": 732
+    }
+  },
+  {
+    "budget": 25,
+    "seed": 1,
+    "n_real": 537,
+    "n_synth": 360,
+    "n_kept": 200,
+    "keep_rate": 0.5555555555555556,
+    "A": {
+      "macro_f1": 0.6393089776932122,
+      "accuracy": 0.6293436293436293,
+      "per_class_f1": {
+        "missing_hole": 0.9942,
+        "mouse_bite": 0.5467,
+        "open_circuit": 0.6013,
+        "short": 0.698,
+        "spur": 0.5079,
+        "spurious_copper": 0.4878
+      }
+    },
+    "B": {
+      "macro_f1": 0.5834532853872926,
+      "accuracy": 0.5772200772200772,
+      "per_class_f1": {
+        "missing_hole": 0.9942,
+        "mouse_bite": 0.4225,
+        "open_circuit": 0.5797,
+        "short": 0.6761,
+        "spur": 0.3729,
+        "spurious_copper": 0.4554
+      },
+      "n_train": 897
+    },
+    "C": {
+      "macro_f1": 0.5989990929488759,
+      "accuracy": 0.5868725868725869,
+      "per_class_f1": {
+        "missing_hole": 0.9704,
+        "mouse_bite": 0.5175,
+        "open_circuit": 0.6316,
+        "short": 0.6301,
+        "spur": 0.3932,
+        "spurious_copper": 0.4512
+      },
+      "n_train": 737
+    }
+  },
+  {
+    "budget": 25,
+    "seed": 2,
+    "n_real": 537,
+    "n_synth": 360,
+    "n_kept": 194,
+    "keep_rate": 0.5388888888888889,
+    "A": {
+      "macro_f1": 0.6365321310640302,
+      "accuracy": 0.6274131274131274,
+      "per_class_f1": {
+        "missing_hole": 0.9942,
+        "mouse_bite": 0.5352,
+        "open_circuit": 0.6377,
+        "short": 0.7308,
+        "spur": 0.4426,
+        "spurious_copper": 0.4787
+      }
+    },
+    "B": {
+      "macro_f1": 0.596255686438102,
+      "accuracy": 0.584942084942085,
+      "per_class_f1": {
+        "missing_hole": 0.9884,
+        "mouse_bite": 0.386,
+        "open_circuit": 0.6906,
+        "short": 0.7083,
+        "spur": 0.374,
+        "spurious_copper": 0.4302
+      },
+      "n_train": 897
+    },
+    "C": {
+      "macro_f1": 0.6609856080100457,
+      "accuracy": 0.6486486486486487,
+      "per_class_f1": {
+        "missing_hole": 0.9884,
+        "mouse_bite": 0.5526,
+        "open_circuit": 0.7222,
+        "short": 0.7368,
+        "spur": 0.4762,
+        "spurious_copper": 0.4897
+      },
+      "n_train": 731
+    }
+  }
+]

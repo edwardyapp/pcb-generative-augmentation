@@ -1,0 +1,26 @@
+[
+  {
+    "set": "NULL    real crop -> nearest OTHER base crop (not its own rotation)",
+    "mean": 0.9997729659080505,
+    "median": 0.9998785257339478,
+    "n": 150
+  },
+  {
+    "set": "CEILING VQ-VAE recon of a real crop (a literal copy)",
+    "mean": 0.9892028570175171,
+    "median": 0.99009108543396,
+    "n": 120
+  },
+  {
+    "set": "TEST    GENERATED demo_pool",
+    "mean": 0.9838922023773193,
+    "median": 0.9881384372711182,
+    "n": 150
+  },
+  {
+    "set": "TEST    GENERATED my sample_uncond",
+    "mean": 0.9837917685508728,
+    "median": 0.9884325265884399,
+    "n": 180
+  }
+]

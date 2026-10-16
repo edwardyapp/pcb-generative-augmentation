@@ -1,0 +1,66 @@
+[
+  {
+    "domain": "tight",
+    "set": "NULL    real TEST-board crops (never seen)",
+    "n": 120,
+    "mean": 0.8884286880493164,
+    "median": 0.8910740613937378,
+    "p95": 0.9226563245058059
+  },
+  {
+    "domain": "tight",
+    "set": "NULL-2  real TRAIN crops (self excluded)",
+    "n": 120,
+    "mean": 0.9741581678390503,
+    "median": 0.9855989217758179,
+    "p95": 0.9999997615814209
+  },
+  {
+    "domain": "tight",
+    "set": "CEILING VQ-VAE recon of TRAIN crops (a real copy)",
+    "n": 61,
+    "mean": 0.9825372099876404,
+    "median": 0.983970046043396,
+    "p95": 0.9910692572593689
+  },
+  {
+    "domain": "tight",
+    "set": "TEST    GENERATED conditional (ep320)",
+    "n": 72,
+    "mean": 0.8791182041168213,
+    "median": 0.878627359867096,
+    "p95": 0.9764485239982605
+  },
+  {
+    "domain": "600px",
+    "set": "NULL-2  real crops (self excluded)",
+    "n": 120,
+    "mean": 0.9996258616447449,
+    "median": 0.9998912811279297,
+    "p95": 0.9999912559986115
+  },
+  {
+    "domain": "600px",
+    "set": "CEILING VQ-VAE recon of real crops (a real copy)",
+    "n": 120,
+    "mean": 0.9892028570175171,
+    "median": 0.99009108543396,
+    "p95": 0.9935919642448425
+  },
+  {
+    "domain": "600px",
+    "set": "TEST    GENERATED demo_pool",
+    "n": 120,
+    "mean": 0.9835176467895508,
+    "median": 0.986946702003479,
+    "p95": 0.9931363761425018
+  },
+  {
+    "domain": "600px",
+    "set": "TEST    GENERATED my sample_uncond",
+    "n": 120,
+    "mean": 0.9818956851959229,
+    "median": 0.9885397553443909,
+    "p95": 0.9941985428333282
+  }
+]

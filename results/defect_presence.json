@@ -1,0 +1,34 @@
+[
+  {
+    "pool": "REAL 600px crops (every one CONTAINS a defect)",
+    "n": 120,
+    "frac": 1.0,
+    "mean_score": 0.992321785291036,
+    "kind": "real",
+    "domain": "600px"
+  },
+  {
+    "pool": "GENERATED \u2014 demo_pool (ICCE-TW demo, 512px)",
+    "n": 120,
+    "frac": 0.9666666666666667,
+    "mean_score": 0.951379474811256,
+    "kind": "gen",
+    "domain": "600px"
+  },
+  {
+    "pool": "GENERATED \u2014 my sample_uncond (256px, same ckpts)",
+    "n": 120,
+    "frac": 1.0,
+    "mean_score": 0.9761520688732465,
+    "kind": "gen",
+    "domain": "600px"
+  },
+  {
+    "pool": "REAL tight crops (every one CONTAINS a defect)",
+    "n": 120,
+    "frac": 0.9833333333333333,
+    "mean_score": 0.9856459537521005,
+    "kind": "real",
+    "domain": "tight"
+  }
+]
